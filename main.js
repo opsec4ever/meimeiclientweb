@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
-const CHUNK_SIZE=16,WORLD_HEIGHT=mobile?48:64,RENDER_DISTANCE=mobile?1:2,WATER_LEVEL=mobile?15:20,seed=928374;
+const CHUNK_SIZE=16,WORLD_HEIGHT=mobile?40:64,RENDER_DISTANCE=mobile?0:2,WATER_LEVEL=mobile?15:20,seed=928374;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x78a9d5);
 scene.fog=new THREE.Fog(0x78a9d5,70,190);
@@ -107,9 +107,10 @@ function createChunk(cx,cz){
   const blocks=[],sx=cx*CHUNK_SIZE,sz=cz*CHUNK_SIZE;
   for(let x=0;x<CHUNK_SIZE;x++)for(let z=0;z<CHUNK_SIZE;z++){
     const wx=sx+x,wz=sz+z,h=getHeight(wx,wz);
-    for(let y=0;y<=h;y++){const type=getBlock(wx,y,wz);if(type!==B.AIR)blocks.push({x:wx,y,z:wz,type})}
+    const bottom=mobile?Math.max(0,h-5):0;
+    for(let y=bottom;y<=h;y++){const type=getBlock(wx,y,wz);if(type!==B.AIR)blocks.push({x:wx,y,z:wz,type})}
     if(!mobile&&isTree(wx,wz))blocks.push(...treeBlocks(wx,wz));
-    if(h<WATER_LEVEL)for(let y=h+1;y<=WATER_LEVEL;y++)blocks.push({x:wx,y,z:wz,type:B.WATER});
+    if(h<WATER_LEVEL)blocks.push({x:wx,y:WATER_LEVEL,z:wz,type:B.WATER});
   }
   const groups=new Map();
   for(const block of blocks){
@@ -122,7 +123,7 @@ function createChunk(cx,cz){
   }
   const meshes=[];
   for(const [type,list] of groups){
-    const mesh=new THREE.InstancedMesh(geometry,material(type),list.length);
+    const mesh=new THREE.InstancedMesh(geometry,material(type),list.length);\n    mesh.frustumCulled=false;
     mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
     for(let i=0;i<list.length;i++){
       const b=list[i];temp.position.set(b.x+.5,b.y+.5,b.z+.5);temp.rotation.set(0,0,0);temp.scale.set(1,1,1);temp.updateMatrix();mesh.setMatrixAt(i,temp.matrix);
