@@ -128,7 +128,7 @@ function createChunk(cx,cz){
   for(const block of blocks){
     const n=[[block.x+1,block.y,block.z],[block.x-1,block.y,block.z],[block.x,block.y+1,block.z],[block.x,block.y-1,block.z],[block.x,block.y,block.z+1],[block.x,block.y,block.z-1]];
     let visible=false;
-    for(const [nx,ny,nz] of n){const nb=broken.has(`${nx},${ny},${nz}`)?B.AIR:getBlock(nx,ny,nz);if(nb===B.AIR||nb===B.WATER||(type===B.WATER&&nb!==B.WATER)){visible=true;break}}
+    for(const [nx,ny,nz] of n){const nb=broken.has(`${nx},${ny},${nz}`)?B.AIR:getBlock(nx,ny,nz);if(nb===B.AIR||nb===B.WATER||(block.type===B.WATER&&nb!==B.WATER)){visible=true;break}}
     if(!visible)continue;
     if(!groups.has(block.type))groups.set(block.type,[]);
     groups.get(block.type).push(block);
@@ -218,26 +218,7 @@ document.addEventListener('mouseup',e=>{if(e.button===0)stopBreaking()});
 
 function updateKeysHud(){for(const code of ['KeyW','KeyA','KeyS','KeyD','Space']){const el=document.querySelector(`[data-key="${code}"]`);if(el)el.classList.toggle('pressed',!!keys[code])}}
 function updateHotbar(){document.querySelectorAll('.hotbar-slot').forEach((el,i)=>el.classList.toggle('selected',i===selectedSlot));const h=document.querySelector('#survival-hud .hotbar');if(h)h.style.setProperty('--selected-slot',selectedSlot)}
-function drawRegionMap(){const c=document.getElementById('region-map-canvas');if(!c)return;const ctx=c.getContext('2d'),size=c.width,scale=4,cx=Math.floor(player.position.x),cz=Math.floor(player.position.z);for(let px=0;px<size;px+=4)for(let pz=0;pz<size;pz+=4){const wx=cx+Math.floor((px-size/2)/scale),wz=cz+Math.floor((pz-size/2)/scale),h=getHeight(wx,wz);ctx.fillStyle=h<=WATER_LEVEL?'#477fc2':h>38?'#8b8f79':h>30?'#5f9d52':'#6eaa54';ctx.fillRect(px,pz,4,4)}ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(size/2,size/2-7);ctx.lineTo(size/2-5,size/2+5);ctx.lineTo(size/2+5,size/2+5);ctx.closePath();ctx.fill();ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.stroke()}
-function hud(){frameCount++;const now=performance.now();if(now-fpsTime>=500){const f=document.getElementById('fps');if(f)f.textContent=`FPS ${Math.round(frameCount/((now-fpsTime)/1000))}`;frameCount=0;fpsTime=now}const cp=document.getElementById('cps');if(cp)cp.textContent=`CPS ${cps}`;if(cps>0&&now-(clickTimes[0]||now)>1000){clickTimes=clickTimes.filter(t=>now-t<1000);cps=clickTimes.length}updateKeysHud();drawRegionMap()}
-function initial(){
-  const total=(RENDER_DISTANCE*2+1)**2;
-  let done=0;
-  const jobs=[];
-  for(let x=-RENDER_DISTANCE;x<=RENDER_DISTANCE;x++)for(let z=-RENDER_DISTANCE;z<=RENDER_DISTANCE;z++)jobs.push([x,z]);
-  jobs.sort((a,b)=>(Math.abs(a[0])+Math.abs(a[1]))-(Math.abs(b[0])+Math.abs(b[1])));
-  function step(){
-    const end=Math.min(done+(mobile?1:2),jobs.length);
-    while(done<end){const [x,z]=jobs[done++];createChunk(x,z)}
-    document.getElementById('progress').style.width=`${done/total*100}%`;
-    if(done<total)requestAnimationFrame(step);
-    else{
-      player.position.set(.5,getHeight(0,0)+1,.5);cameraUpdate();
-      setTimeout(()=>{const l=document.getElementById('loading');l.style.opacity='0';setTimeout(()=>{l.style.display='none';document.getElementById('start').style.display='flex'},350)},150);
-    }
-  }
-  requestAnimationFrame(step);
-}
+
 renderer.domElement.addEventListener('click',()=>{if(!mobile&&!locked)renderer.domElement.requestPointerLock()});
 document.addEventListener('pointerlockchange',()=>locked=document.pointerLockElement===renderer.domElement);
 document.addEventListener('mousemove',e=>{if(!locked||!gameStarted)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-Math.PI/2+.01,Math.min(Math.PI/2-.01,pitch))});
