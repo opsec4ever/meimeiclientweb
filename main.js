@@ -21,29 +21,37 @@ const sun=new THREE.DirectionalLight(0xffffff,2);
 sun.position.set(80,150,60);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-90;sun.shadow.camera.right=90;sun.shadow.camera.top=90;sun.shadow.camera.bottom=-90;sun.shadow.camera.near=1;sun.shadow.camera.far=300;
 scene.add(sun);
 
-const TEX={"grassTop":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAA8UlEQVR42gUAWW+CMPj7yXuZ0ylHOWwpR6EFC0ERh8gh+ELGEl9mwh8zEC9iv2eaVxwodpoPHxKvlJmeGVp3E4uHXah8xXJIGMbndsRf+gwrm8ooU7hm+pK5jQI/5mgODzI8P/XmrhIfsnR9Q4ckxwkx1ySIQT3WITepZuHfIWokA4ZPbri7WnLEiJVaB00+9wMaj1NvcFsUKkjjz/fSXscR74KJIcgLWRtzIF6bxmREMrDGfSUt7kjubSdNofCUiGaR/U0jqpzrjQTUrriSoeUi2rwk7QOqy2s73WOhJgnuTu4G7ANxrmksgv9dZ4WkeAPz+JNw8txdwAAAAABJRU5ErkJggg==","grassSide":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAeFBMVEV5VTqWbEq5hVyHh4dwsEZoqD5iojhsrEJhoTdpqT9npz1goDZXly1QkCZzs0l2tkyKuVp+vlRqqkCDslOBsFFmpjyQv2CSwWKTwmN/v1WXxmdvr0VkpDqcy2xrq0GNvF11tUttrUN0tEpfnzVxsUd0WERsbGxZPSmGrpghAAAAjElEQVR42gXBB0LCAAAEwd2LGkAFG3ZqIPf/HzLDebPebv+m8XXztlounk8cx5eP994/TN+f68W42nPo7n/Zu55/vn779Fg6t5e2U0+lBTEV2s5YoIptoUAIMEBCgggkClZBEUSKAgUstAAkCJIQm1QHEDQ4K5VCRQMAJCBcUZoSRRpKEwRFogwoKL0BxA0LD3lN79UAAAAASUVORK5CYII=","dirt":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEV5VTq5hVyHh4eWbEpsbGx0WERZPSk6VlZqAAAAa0lEQVR42gXBwQnDQAxFwSd+0FnLgs8+5SyjsA2kgZQgY9j+S8gMM61oM9R6W85NeBDs4BPLSpbk9bBeary02zGC02JIMIpVFCm5kkbtDUPIYt5HnaQuffNxPCuAgfiVH1bk7T5EkTPPovwPGbIOYwnMHcMAAAAASUVORK5CYII=","stone":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAAXklEQVR42gXBMQEAMAwEocqNgNuR8JYLb9uUruCRgLv0dFddBR6bsaF6Ucm2xTNAXddebGur4NVdV1R424xtoMewjW3zTuouUT2wgc2eyhR3XW9TVFR7CsC2PaBsxAdyLn2NNWHIVAAAAABJRU5ErkJggg==","sand":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEXaz6Pt68vn5Lvj27DVxJbRuoo9qeK3AAAAZUlEQVR42gXBMQrCQABE0U9m0gtiH28wkNiP2bUXzP3P4ntscjI0qD2u7bGQ6wS76PCxD0NvQ6LC7OlBOf3u/NqY2nMxjT6jKVuZqzlYZZFLTNJ9tnQMPzNF8pJEke5JfpDsMskfw+0REW3/INgAAAAASUVORK5CYII=","oak":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEV0WjaYeEmRcUJfSitMPSY4Kxi/mP6UAAAAaElEQVR42gXBwQ3DIBREwSd2/90SKWAl8B0lDRAqcPpvJjM4lWpHuFevtkV9qttb3LJUezBV6nLInu7TYe2xEof15M1Q8I+3xgh8WZp5oKnkPLiprro2L8bdi8W142Egh9s+kLOnOfoDKZ4L2kN8RTwAAAAASUVORK5CYII=","oakTop":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAG1BMVEVfSivCnWK4lF+vj1WfhE2WdEF+Yjd0WjZMPSZxHR9aAAAAbklEQVR42gXBgXHDQAwDMFD21dp/3CZ+BmA9lmdZZP+R5oziL+ZWTRHf3vgIUq70liYg2phtmUlmiI1rjuvFHPOeoVWJamMAIoRZoEeFjWvejLTa6XtTDiA1W6pte7AxkwbgPTFE44xyWCzPsg8/vNE4rPRQOg0AAAAASUVORK5CYII=","leaves":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAD1BMVEUAAAC5vLmYmZh3dXdoZGjJX6haAAAAAXRSTlMAQObYZgAAAGlJREFUeNoFgAERwyAMAD8pAtJ0AgIYaAEBbI1/TTtSNOaPiyCHDqkwtVvIia7tHzB6p1IatFtW8gazuB93e1j7tBwy8PJtR4+OkW+0cDR2exThSqQeASMalo9QZe2iV8XcmbgRp5W8Rf/WMg1MmmHulQAAAABJRU5ErkJggg==","water":"iVBORw0KGgoAAAANSUhEUgAAABAAAAIABAMAAAB5lPHgAAAAJ1BMVEWlpaX////5+fnY2NjW1tbV1dXT09PS0tLPz8/Ozs7CwsK4uLiurq5q5mAmAAAADXRSTlO0tLS0tLS0tLS0tLS0frXQ3wAABURJREFUeNqN2D9uG0cUBvDvAK8hkEjRxifIAXKEHME9U1DJeBs2EkCoUREHcGfAdgxVZrMEnl5tA4aKcSMDk+9Q0fzbHXJJO9MMZojB/PD43uzOwgghd38BIInYAaAa4BGMSgL0EAgBT6N5wBjbZYc/ehpJxcKtXQj2iNwESGsCiTo1dR5CqvdpHBavPAJ//4VG4iF5hrczD2ceAyDG2LF6/owenzw8ASJl7QvJw5vEkdx2WD3xInjN34Rj60SNZ0Hgw8zB71sUTjAZHiDH8CAGzVyigJQ+PeZg8oPFTh62xT57NiyePFo9I8uC0B6SyeHZPHh543kIQ5h6OHsw8yl3jcauLnsNm9DD1+x4BZO7hkDyXm9GjDG8mDykQrR4mj289vvHsogfioEP0dPfFw+IR+slDEUlDyx5pPYPTPhicR9AUH9HW00ePtJ7wkD2+euL/NYweXdgTMCDRGYoHpzwyee6TR3VoPG8aj2f1gJI8kjx9SiKP1qMMvW88Wj2hGGTfw8ZT8+ff4tndTJ73kycwem4Iqwnpj3g8Nda7MbjkMT03bjsFv+Fh67HqCckTdNsp4bwPLyx6OOSlatHzLGSPVI9QiweNh6MnuKMenvAwzDzL4nlcmf4E4ar1dHseZA9aT+AyebR4lNxNnmE0TIehth7yqKd/8tybXgDVM0SPm1lIi8OH7AmcPEweGjl0+3AY43HCzn3aJc967sUHz6q6QLg1QfEtu0JeRE9fvL44qE1nstDT9isqmcHf8oj4DFPWLyKHo6eM0vJt9wQsjob0GdPgEfycO4pBSifi8dlD056lH7P4wGtnouXxTOYribPtvOQ1T8DbhoPk8ePHkbPblPmRYtHr2cefscjxcPR83UwvqZCjU/0XL0e0CVPUOCEZ3B53lcP9Rqafx9OeTj33GTP4rkSGj1OFRI6w+i5vp17/MyjICR7eqa5c6j/lud8vh9T188vxqhxi87Z8WD6jm//Yifj3lKQpJUqlVPqJ7r4rHQeGoLXlbGbJPJE+zAs9xYgOimehg9K7z7LJ/mDz8rudq8uQm+56lEqwenz084XEG1Ppa7LrWI5RDj40eKR6AYTV55o3RYwceGlk9TJ5t8Wj2bF31WPR8rh6beQaFQQiP6qErHvKoh2tXPbLnQfZ4BDae6Xx+fat450cPiqfmA0l1ub4k7Q/LHkX4lkeWzkpiHfH8Rg8jt5cpn614tHq65FEF4H3yCKTGp3q88P97IEvjac/z4lmpDY2HBF//3XrEp3UQoHpMHXcOIXmEMCU9Lz0JIZsk8fve6x4XmbPzlnrCSS4eGnYJI8FgGlB9pTD2twmns86eZQMxuyRI54IaT2h1PvkeRU9XgYlP0XPh+IRyOKOeMiVUt4PJUqyR+BJ5zjcTB6q0kcPs0eOAD50nhKvZPlEby+y/G5V4Zl9LB4KOG8IywpjAVRMznHR92GQ4eBtORRXRljMHkQH7/n+Tp51Fg8vY8cXXckjBKUYT15SBGeJY9QQvJwig+ZPMG56NkxgsWgetl6pHjkwPNIZqOIsnhCen6pXhYPLXlIyp6HnuSBR0aPJs/WRs86e3z2SPHEoUyeMHo4evRZvu+sNsmD6LloPF7ATX/gEUSPHz1UjZ5l9ihc9EzHcvWQe/HB6OHk+dhFz26jLnuEDD9BPMmasXT5/l7vp370GG08n1eN50rXfetB9RDtFP3kKdRw3cWdtp3a6Bnen/zeMvfk4qeO3zdAxUKXrvHkTeceQfbI6JGwuMseGvkfU1SgCRdOlMYAAAAASUVORK5CYII="};
+const ASSET_BASE='https://f37513cb.mcasset-cloud.pages.dev/26.3/assets/minecraft/textures/block/';
 const loader=new THREE.TextureLoader();
-function tx(b){const t=loader.load('data:image/png;base64,'+b);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t;}
-const textures={grassTop:tx(TEX.grassTop),grassSide:tx(TEX.grassSide),dirt:tx(TEX.dirt),stone:tx(TEX.stone),sand:tx(TEX.sand),oak:tx(TEX.oak),oakTop:tx(TEX.oakTop),leaves:tx(TEX.leaves),water:tx(TEX.water)};
-function mat(map,extra={}){return new THREE.MeshLambertMaterial({map,...extra});}
-function pixelOreTexture(base,accent,seed){
-  const c=document.createElement('canvas');c.width=16;c.height=16;
-  const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.fillStyle=base;x.fillRect(0,0,16,16);
-  let n=seed>>>0;
-  const rnd=()=>{n=Math.imul(n^n>>>16,2246822519);n=Math.imul(n^n>>>13,3266489917);return (n>>>0)/4294967295};
-  for(let i=0;i<42;i++){const v=Math.floor(rnd()*24);x.fillStyle=v<4?'#1b1b1d':v<9?'#55575a':base;x.fillRect(Math.floor(rnd()*16),Math.floor(rnd()*16),1+(rnd()>.8?1:0),1);}
-  for(let i=0;i<7;i++){x.fillStyle=accent;const px=2+Math.floor(rnd()*12),py=2+Math.floor(rnd()*12);x.fillRect(px,py,1,1);if(rnd()>.35)x.fillRect(px+1,py,1,1);if(rnd()>.55)x.fillRect(px,py+1,1,1);}
-  const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t;
-}
+function tx(name){const t=loader.load(ASSET_BASE+name+'.png');t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t}
+const textures={
+  grassTop:tx('grass_block_top'),
+  grassSide:tx('grass_block_side'),
+  dirt:tx('dirt'),
+  stone:tx('stone'),
+  sand:tx('sand'),
+  oak:tx('oak_log'),
+  oakTop:tx('oak_log_top'),
+  leaves:tx('oak_leaves'),
+  water:tx('water_still')
+};
+function mat(map,extra={}){return new THREE.MeshLambertMaterial({map,...extra})}
 const oreTextures={
-  deepslate:pixelOreTexture('#484a4f','#686a70',11),
-  coal:pixelOreTexture('#777777','#171717',21),
-  iron:pixelOreTexture('#777777','#d39b7b',31),
-  copper:pixelOreTexture('#777777','#c86f4b',41),
-  gold:pixelOreTexture('#777777','#f4c84b',51),
-  redstone:pixelOreTexture('#777777','#c83232',61),
-  diamond:pixelOreTexture('#777777','#35dce5',71),
-  emerald:pixelOreTexture('#777777','#36c978',81)
+  deepslate:tx('deepslate'),
+  coal:tx('coal_ore'),
+  iron:tx('iron_ore'),
+  copper:tx('copper_ore'),
+  gold:tx('gold_ore'),
+  redstone:tx('redstone_ore'),
+  diamond:tx('diamond_ore'),
+  emerald:tx('emerald_ore'),
+  deepslateCoal:tx('deepslate_coal_ore'),
+  deepslateIron:tx('deepslate_iron_ore'),
+  deepslateCopper:tx('deepslate_copper_ore'),
+  deepslateGold:tx('deepslate_gold_ore'),
+  deepslateRedstone:tx('deepslate_redstone_ore'),
+  deepslateDiamond:tx('deepslate_diamond_ore'),
+  deepslateEmerald:tx('deepslate_emerald_ore')
 };
 const materials={
   grass:[mat(textures.grassSide),mat(textures.grassSide),mat(textures.grassTop,{color:0x91bd59}),mat(textures.dirt),mat(textures.grassSide),mat(textures.grassSide)],
@@ -52,7 +60,8 @@ const materials={
   leaves:mat(textures.leaves,{transparent:true,alphaTest:.1,color:0x77ab3a}),
   water:mat(textures.water,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),
   deepslate:mat(oreTextures.deepslate),coal:mat(oreTextures.coal),iron:mat(oreTextures.iron),copper:mat(oreTextures.copper),
-  gold:mat(oreTextures.gold),redstone:mat(oreTextures.redstone),diamond:mat(oreTextures.diamond),emerald:mat(oreTextures.emerald)
+  gold:mat(oreTextures.gold),redstone:mat(oreTextures.redstone),diamond:mat(oreTextures.diamond),emerald:mat(oreTextures.emerald),
+  deepslateCoal:mat(oreTextures.deepslateCoal),deepslateIron:mat(oreTextures.deepslateIron),deepslateCopper:mat(oreTextures.deepslateCopper),deepslateGold:mat(oreTextures.deepslateGold),deepslateRedstone:mat(oreTextures.deepslateRedstone),deepslateDiamond:mat(oreTextures.deepslateDiamond),deepslateEmerald:mat(oreTextures.deepslateEmerald)
 };
 
 const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7,DEEPSLATE:8,COAL:9,IRON:10,COPPER:11,GOLD:12,REDSTONE:13,DIAMOND:14,EMERALD:15};
@@ -103,7 +112,7 @@ function getBlock(x,y,z){
   if(y>h-4)return h<=WATER_LEVEL+1?B.SAND:B.DIRT;
   const n=oreNoise(x,y,z);
   const deep=y<9;
-  if(y<=30&&n>.975)return B.COAL;
+  if(y<=30&&n>.975)return deep?B.COAL:B.COAL;
   if(y<=28&&n>.985)return B.IRON;
   if(y<=30&&n>.991)return B.COPPER;
   if(y<=20&&n>.995)return B.GOLD;
