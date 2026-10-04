@@ -33,7 +33,8 @@ const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7};
 const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D();
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
-let yaw=0,pitch=0,locked=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0;\nconst mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
+let yaw=0,pitch=0,locked=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0;
+const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
 const clock=new THREE.Clock();
 
 function hash2D(x,z){
@@ -200,9 +201,7 @@ function animate(){
   if(chunkTimer>.35){updateChunks();chunkTimer=0}
   renderer.render(scene,camera);
 }
-initial();animate();
-const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
-if(mobile){
+initial();animate();\nif(mobile){
   document.getElementById('mobile').style.display='block';
   const stick=document.getElementById('stick'),knob=document.getElementById('stick-knob');
   let stickId=null,sx=0,sy=0;
