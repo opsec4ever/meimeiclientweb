@@ -21,7 +21,7 @@ const sun=new THREE.DirectionalLight(0xffffff,2);
 sun.position.set(80,150,60);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-90;sun.shadow.camera.right=90;sun.shadow.camera.top=90;sun.shadow.camera.bottom=-90;sun.shadow.camera.near=1;sun.shadow.camera.far=300;
 scene.add(sun);
 
-const ASSET_BASE='https://f37513cb.mcasset-cloud.pages.dev/26.3/assets/minecraft/textures/block/';
+const ASSET_BASE='https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/block/';
 const loader=new THREE.TextureLoader();
 function tx(name){const t=loader.load(ASSET_BASE+name+'.png');t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t}
 const textures={
