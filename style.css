@@ -62,3 +62,8 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
 #survival-hud .hotbar{width:364px;flex:none}
 #survival-hud .hotbar-selection{left:calc(var(--selected-slot, 0) * 40.444px)}
 #survival-hud{width:408px}
+
+#survival-hud .hotbar{position:relative;width:364px;height:46px}
+#survival-hud .hotbar-slots{position:absolute;left:2px;top:0;width:360px;height:46px;display:grid;grid-template-columns:repeat(9,40px)}
+#survival-hud .hotbar-slot{width:40px;height:46px}
+#survival-hud .hotbar-selection{position:absolute!important;left:calc(2px + var(--selected-slot,0) * 40px)!important;top:-1px!important;width:40px!important;height:46px!important;background-size:40px 46px!important;background-position:center!important}
