@@ -88,3 +88,27 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
 #survival-hud .hotbar-slot{width:40px!important;height:46px!important;position:relative!important}
 #survival-hud .hotbar-selection{position:absolute!important;left:calc(2px + var(--selected-slot,0) * 40px)!important;top:-1px!important;width:40px!important;height:46px!important;background-size:40px 46px!important;background-position:center!important;z-index:5!important}
 @media(max-width:800px){#survival-hud{transform:translateX(-50%) scale(.78)!important;transform-origin:bottom center!important}}
+
+/* offhand slot: empty Minecraft-style item slot */
+#survival-hud .offhand-slot{
+  position:absolute!important;
+  left:0!important;
+  top:1px!important;
+  width:40px!important;
+  height:40px!important;
+  box-sizing:border-box!important;
+  background:#3b3b3b!important;
+  border:3px solid #171717!important;
+  box-shadow:
+    inset 2px 2px 0 #777,
+    inset -2px -2px 0 #1d1d1d,
+    0 1px 0 #000!important;
+  image-rendering:pixelated!important;
+}
+#survival-hud .offhand-slot:before{
+  content:"";
+  position:absolute;
+  inset:4px;
+  background:#252516;
+  box-shadow:inset 1px 1px 0 #343424,inset -1px -1px 0 #16160e;
+}
