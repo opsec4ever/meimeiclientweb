@@ -108,15 +108,15 @@ function createChunk(cx,cz){
   for(let x=0;x<CHUNK_SIZE;x++)for(let z=0;z<CHUNK_SIZE;z++){
     const wx=sx+x,wz=sz+z,h=getHeight(wx,wz);
     const bottom=mobile?Math.max(0,h-5):0;
-    for(let y=bottom;y<=h;y++){const type=getBlock(wx,y,wz);if(type!==B.AIR)blocks.push({x:wx,y,z:wz,type})}
-    if(!mobile&&isTree(wx,wz))blocks.push(...treeBlocks(wx,wz));
+    for(let y=bottom;y<=h;y++){const type=getBlock(wx,y,wz);if(type!==B.AIR&&!broken.has(`${wx},${y},${wz}`))blocks.push({x:wx,y,z:wz,type})}
+    if(!mobile&&isTree(wx,wz))for(const tb of treeBlocks(wx,wz))if(!broken.has(`${tb.x},${tb.y},${tb.z}`))blocks.push(tb);
     if(h<WATER_LEVEL)blocks.push({x:wx,y:WATER_LEVEL,z:wz,type:B.WATER});
   }
   const groups=new Map();
   for(const block of blocks){
     const n=[[block.x+1,block.y,block.z],[block.x-1,block.y,block.z],[block.x,block.y+1,block.z],[block.x,block.y-1,block.z],[block.x,block.y,block.z+1],[block.x,block.y,block.z-1]];
     let visible=false;
-    for(const [nx,ny,nz] of n){const nb=getBlock(nx,ny,nz);if(nb===B.AIR||nb===B.WATER){visible=true;break}}
+    for(const [nx,ny,nz] of n){const nb=broken.has(`${nx},${ny},${nz}`)?B.AIR:getBlock(nx,ny,nz);if(nb===B.AIR||nb===B.WATER){visible=true;break}}
     if(!visible)continue;
     if(!groups.has(block.type))groups.set(block.type,[]);
     groups.get(block.type).push(block);
@@ -172,18 +172,37 @@ function move(dt){
 }
 function cameraUpdate(){camera.position.set(player.position.x,player.position.y+1.62,player.position.z);camera.rotation.y=yaw;camera.rotation.x=pitch}
 let breaking=false,breakTarget=null,breakStart=0,breakDuration=0,breakStage=-1;
-const breakOverlay=document.createElement('div');breakOverlay.id='break-overlay';document.body.appendChild(breakOverlay);
+const destroyTextures=Array.from({length:10},(_,i)=>loader.load(`https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/block/destroy_stage_${i}.png`));
+for(const t of destroyTextures){t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace}
+const breakMesh=new THREE.Mesh(geometry,Array.from({length:6},()=>new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,opacity:.95})));
+breakMesh.scale.setScalar(1.003);breakMesh.visible=false;scene.add(breakMesh);
 function rayBlock(){
   const origin=camera.position.clone(),dir=new THREE.Vector3();camera.getWorldDirection(dir);
-  for(let d=0;d<=6;d+=.05){const p=origin.clone().addScaledVector(dir,d),x=Math.floor(p.x),y=Math.floor(p.y),z=Math.floor(p.z),type=broken.has(`${x},${y},${z}`)?B.AIR:getBlock(x,y,z);if(type!==B.AIR&&type!==B.WATER)return{x,y,z,type}}
+  for(let d=0;d<=6;d+=.04){const p=origin.clone().addScaledVector(dir,d),x=Math.floor(p.x),y=Math.floor(p.y),z=Math.floor(p.z),type=broken.has(`${x},${y},${z}`)?B.AIR:getBlock(x,y,z);if(type!==B.AIR&&type!==B.WATER)return{x,y,z,type}}
   return null;
 }
 function hardness(type){return type===B.LEAVES?.18:type===B.GRASS||type===B.DIRT||type===B.SAND?.55:type===B.WOOD?1.05:type===B.STONE?1.5:.8}
-function setBreakStage(stage){if(stage<0){breakOverlay.style.display='none';breakOverlay.style.backgroundImage='none';return}breakOverlay.style.display='block';breakOverlay.style.backgroundImage=`url('https://mcasset.cloud/26.3/assets/minecraft/textures/block/destroy_stage_${stage}.png')`}
-function startBreaking(){if(!gameStarted||mobile)return;const t=rayBlock();if(!t)return;breaking=true;breakTarget=t;breakStart=performance.now();breakDuration=hardness(t.type)*1000;breakStage=0;setBreakStage(0)}
-function stopBreaking(){breaking=false;breakTarget=null;breakStage=-1;setBreakStage(-1)}
-function finishBreaking(t){broken.add(`${t.x},${t.y},${t.z}`);const cx=Math.floor(t.x/CHUNK_SIZE),cz=Math.floor(t.z/CHUNK_SIZE);unloadChunk(cx,cz);createChunk(cx,cz);stopBreaking()}
-document.addEventListener('mousedown',e=>{if(e.button===0)startBreaking()});document.addEventListener('mouseup',e=>{if(e.button===0)stopBreaking()});
+function setBreakStage(stage,target){
+  if(stage<0||!target){breakMesh.visible=false;return}
+  breakMesh.position.set(target.x+.5,target.y+.5,target.z+.5);
+  for(const mat of breakMesh.material)mat.map=destroyTextures[stage];
+  for(const mat of breakMesh.material)mat.needsUpdate=true;
+  breakMesh.visible=true;
+}
+function startBreaking(){
+  if(!gameStarted||mobile)return;
+  const t=rayBlock();if(!t)return;
+  breaking=true;breakTarget=t;breakStart=performance.now();breakDuration=hardness(t.type)*1000;breakStage=0;setBreakStage(0,t);
+}
+function stopBreaking(){breaking=false;breakTarget=null;breakStage=-1;breakMesh.visible=false}
+function finishBreaking(t){
+  const k=`${t.x},${t.y},${t.z}`;broken.add(k);
+  const cx=Math.floor(t.x/CHUNK_SIZE),cz=Math.floor(t.z/CHUNK_SIZE);
+  unloadChunk(cx,cz);createChunk(cx,cz);
+  stopBreaking();
+}
+document.addEventListener('mousedown',e=>{if(e.button===0)startBreaking()});
+document.addEventListener('mouseup',e=>{if(e.button===0)stopBreaking()});
 
 function hud(){
   document.getElementById('coords').textContent=`X: ${Math.floor(player.position.x)}  Y: ${Math.floor(player.position.y)}  Z: ${Math.floor(player.position.z)}`;
@@ -218,7 +237,7 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),.05);
-  if(gameStarted)move(dt);if(breaking){const t=rayBlock();if(!t||t.x!==breakTarget.x||t.y!==breakTarget.y||t.z!==breakTarget.z)stopBreaking();else{const p=(performance.now()-breakStart)/breakDuration,stage=Math.min(9,Math.floor(p*10));if(stage!==breakStage){breakStage=stage;setBreakStage(stage)}if(p>=1)finishBreaking(t)}}
+  if(gameStarted)move(dt);if(breaking){const t=rayBlock();if(!t||t.x!==breakTarget.x||t.y!==breakTarget.y||t.z!==breakTarget.z)stopBreaking();else{const p=(performance.now()-breakStart)/breakDuration,stage=Math.min(9,Math.floor(p*10));if(stage!==breakStage){breakStage=stage;setBreakStage(stage,breakTarget)}if(p>=1)finishBreaking(t)}}
   cameraUpdate();hud();chunkTimer+=dt;
   if(chunkTimer>.35){updateChunks();chunkTimer=0}
   renderer.render(scene,camera);
