@@ -28,18 +28,18 @@ function mat(map,extra={}){return new THREE.MeshLambertMaterial({map,...extra});
 
 
 const materials={
-  grass:[mat(textures.grassSide),mat(textures.grassSide),mat(textures.grassTop),mat(textures.dirt),mat(textures.grassSide),mat(textures.grassSide)],
+  grass:[mat(textures.grassSide),mat(textures.grassSide),mat(textures.grassTop,{color:0x91bd59}),mat(textures.dirt),mat(textures.grassSide),mat(textures.grassSide)],
   dirt:mat(textures.dirt),stone:mat(textures.stone),sand:mat(textures.sand),
   wood:[mat(textures.oak),mat(textures.oak),mat(textures.oakTop),mat(textures.oakTop),mat(textures.oak),mat(textures.oak)],
-  leaves:mat(textures.leaves,{transparent:true,alphaTest:.1}),
-  water:mat(textures.water,{transparent:true,opacity:.72,depthWrite:false})
+  leaves:mat(textures.leaves,{transparent:true,alphaTest:.1,color:0x77ab3a}),
+  water:mat(textures.water,{transparent:true,opacity:.72,depthWrite:false,color:0x3f76e4})
 };
 
 const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7};
 const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D();
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
-let yaw=0,pitch=0,locked=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0;
+let yaw=0,pitch=0,locked=false,gameStarted=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0;
 
 const clock=new THREE.Clock();
 
@@ -196,15 +196,15 @@ function initial(){
 }
 renderer.domElement.addEventListener('click',()=>{if(!mobile&&!locked)renderer.domElement.requestPointerLock()});
 document.addEventListener('pointerlockchange',()=>locked=document.pointerLockElement===renderer.domElement);
-document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-Math.PI/2+.01,Math.min(Math.PI/2-.01,pitch))});
+document.addEventListener('mousemove',e=>{if(!locked||!gameStarted)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-Math.PI/2+.01,Math.min(Math.PI/2-.01,pitch))});
 document.addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault()});
 document.addEventListener('keyup',e=>keys[e.code]=false);
-document.getElementById('play').addEventListener('click',()=>{document.getElementById('start').style.display='none';renderer.domElement.requestPointerLock()});
+document.getElementById('play').addEventListener('click',()=>{gameStarted=true;document.getElementById('start').style.display='none';if(!mobile)renderer.domElement.requestPointerLock()});
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),.05);
-  if(locked||mobile)move(dt);
+  if(gameStarted)move(dt);
   cameraUpdate();hud();chunkTimer+=dt;
   if(chunkTimer>.35){updateChunks();chunkTimer=0}
   renderer.render(scene,camera);
@@ -232,5 +232,5 @@ if(mobile){
   renderer.domElement.addEventListener('touchstart',e=>{if(e.target.closest('#mobile'))return;const t=e.changedTouches[0];lookId=t.identifier;lx=t.clientX;ly=t.clientY},{passive:true});
   renderer.domElement.addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===lookId){yaw-=(t.clientX-lx)*.006;pitch-=(t.clientY-ly)*.006;pitch=Math.max(-1.5,Math.min(1.5,pitch));lx=t.clientX;ly=t.clientY}},{passive:true});
   renderer.domElement.addEventListener('touchend',e=>{for(const t of e.changedTouches)if(t.identifier===lookId)lookId=null},{passive:true});
-  document.getElementById('play').addEventListener('touchend',e=>{e.preventDefault();document.getElementById('start').style.display='none'},{passive:false});
+  document.getElementById('play').addEventListener('touchend',e=>{e.preventDefault();gameStarted=true;document.getElementById('start').style.display='none'},{passive:false});
 }
