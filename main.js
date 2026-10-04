@@ -40,7 +40,7 @@ const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Obje
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
 let yaw=0,pitch=0,locked=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0;
-const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
+
 const clock=new THREE.Clock();
 
 function hash2D(x,z){
