@@ -1,0 +1,23 @@
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111;font-family:'Minecraftia',monospace;image-rendering:pixelated}
+body{user-select:none}
+#game{position:fixed;inset:0}
+canvas{display:block}
+#crosshair{position:fixed;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);pointer-events:none;z-index:10}
+#crosshair span:first-child{position:absolute;left:8px;top:1px;width:2px;height:16px;background:#fff;box-shadow:1px 1px 0 #000}
+#crosshair span:last-child{position:absolute;left:1px;top:8px;width:16px;height:2px;background:#fff;box-shadow:1px 1px 0 #000}
+#hud{position:fixed;top:14px;left:14px;z-index:20;color:#fff;font-size:11px;line-height:1.9;text-shadow:2px 2px 0 #000;pointer-events:none}
+.title{color:#b06cff;font-size:13px;margin-bottom:3px}
+#loading{position:fixed;inset:0;z-index:100;background:#101010;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .5s}
+.loading-title{color:#fff;font-size:25px;text-shadow:3px 3px #000;margin-bottom:22px}
+.loading-text{color:#aaa;font-size:10px;margin-bottom:13px}
+.bar{width:320px;height:18px;border:3px solid #292929;background:#111;box-shadow:3px 3px 0 #000}
+#progress{width:0%;height:100%;background:#8e4cff;transition:width .15s}
+#start{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35)}
+.start-box{width:430px;padding:32px;background:rgba(12,12,15,.94);border:2px solid #292929;box-shadow:7px 7px 0 rgba(0,0,0,.6);text-align:center}
+.start-title{color:#b06cff;font-size:24px;text-shadow:3px 3px #000}
+.start-sub{color:#888;font-size:9px;margin-top:12px;margin-bottom:27px}
+button{width:100%;height:48px;border:2px solid #6d35ba;background:#8e4cff;color:#fff;font-family:'Minecraftia',monospace;font-size:12px;cursor:pointer;box-shadow:4px 4px 0 #32165a}
+button:hover{background:#a56aff}
+button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
+.controls{color:#777;font-size:8px;line-height:2;margin-top:24px}
