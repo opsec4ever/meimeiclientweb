@@ -60,7 +60,7 @@ const materials={
   dirt:mat(textures.dirt),stone:mat(textures.stone),sand:mat(textures.sand),
   wood:[mat(textures.oak),mat(textures.oak),mat(textures.oakTop),mat(textures.oakTop),mat(textures.oak),mat(textures.oak)],
   leaves:mat(textures.leaves,{transparent:true,alphaTest:.1,color:0x77ab3a}),
-  water:[mat(textures.waterFlow,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),mat(textures.waterFlow,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),mat(textures.waterStill,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),mat(textures.waterStill,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),mat(textures.waterFlow,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),mat(textures.waterFlow,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide})],
+  water:[0,1,2,3,4,5].map((face)=>mat(face===2?textures.waterStill:textures.waterFlow,{transparent:true,opacity:.72,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide})),
   bedrock:mat(oreTextures.bedrock),deepslate:mat(oreTextures.deepslate),coal:mat(oreTextures.coal),iron:mat(oreTextures.iron),copper:mat(oreTextures.copper),
   gold:mat(oreTextures.gold),redstone:mat(oreTextures.redstone),diamond:mat(oreTextures.diamond),emerald:mat(oreTextures.emerald),
   deepslateCoal:mat(oreTextures.deepslateCoal),deepslateIron:mat(oreTextures.deepslateIron),deepslateCopper:mat(oreTextures.deepslateCopper),deepslateGold:mat(oreTextures.deepslateGold),deepslateRedstone:mat(oreTextures.deepslateRedstone),deepslateDiamond:mat(oreTextures.deepslateDiamond),deepslateEmerald:mat(oreTextures.deepslateEmerald)
@@ -69,7 +69,7 @@ const materials={
 const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7,DEEPSLATE:8,COAL:9,IRON:10,COPPER:11,GOLD:12,REDSTONE:13,DIAMOND:14,EMERALD:15,DEEPSLATE_COAL:16,DEEPSLATE_IRON:17,DEEPSLATE_COPPER:18,DEEPSLATE_GOLD:19,DEEPSLATE_REDSTONE:20,DEEPSLATE_DIAMOND:21,DEEPSLATE_EMERALD:22,BEDROCK:23};
 const hotbarTypes=[B.GRASS,B.DIRT,B.STONE,B.SAND,B.WOOD,B.LEAVES,B.DEEPSLATE,B.STONE,B.BEDROCK];
 function addToInventory(type){const i=hotbarTypes.indexOf(type);if(i>=0){inventoryCounts[i]++;updateInventoryUI();return true}return false}
-function updateInventoryUI(){document.querySelectorAll('.hotbar-slot').forEach((el,i)=>{let n=el.querySelector('.item-count');if(!n){n=document.createElement('span');n.className='item-count';el.appendChild(n)}n.textContent=inventoryCounts[i]||'';el.style.backgroundImage=`url(${HOTBAR_ICONS[i]})`;el.style.backgroundRepeat='no-repeat';el.style.backgroundPosition='center';el.style.backgroundSize='28px 28px'})}
+function updateInventoryUI(){document.querySelectorAll('.hotbar-slot').forEach((el,i)=>{let n=el.querySelector('.item-count');if(!n){n=document.createElement('span');n.className='item-count';el.appendChild(n)}const have=inventoryCounts[i]>0;n.textContent=have?inventoryCounts[i]:'';el.style.backgroundImage=have?`url(${HOTBAR_ICONS[i]})`:'';el.style.backgroundRepeat='no-repeat';el.style.backgroundPosition='center';el.style.backgroundSize='28px 28px'})}
 let placeRotation=0;
 const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D(),broken=new Set(),placed=new Map(),drops=[];
 const keys={};
