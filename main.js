@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
-const CHUNK_SIZE=16,WORLD_MIN=-64,WORLD_MAX=320,RENDER_DISTANCE=mobile?0:2,WATER_LEVEL=63,seed=(crypto.getRandomValues(new Uint32Array(1))[0]||Date.now())|0;
+const CHUNK_SIZE=16,WORLD_MIN=-64,WORLD_MAX=320,RENDER_DISTANCE=mobile?0:1,WATER_LEVEL=63,seed=(crypto.getRandomValues(new Uint32Array(1))[0]||Date.now())|0;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x78a9d5);
 scene.fog=new THREE.Fog(0x78a9d5,70,190);
@@ -256,13 +256,13 @@ function unloadChunk(cx,cz){
   chunks.delete(key(cx,cz));
 }
 function updateChunks(){
-  const pcx=Math.floor(player.position.x/CHUNK_SIZE),pcz=Math.floor(player.position.z/CHUNK_SIZE),wanted=new Set();
+  const pcx=Math.floor(player.position.x/CHUNK_SIZE),pcz=Math.floor(player.position.z/CHUNK_SIZE),wanted=new Set(),missing=[];
   for(let x=-RENDER_DISTANCE;x<=RENDER_DISTANCE;x++)for(let z=-RENDER_DISTANCE;z<=RENDER_DISTANCE;z++){
     if(Math.max(Math.abs(x),Math.abs(z))>RENDER_DISTANCE)continue;
-    const cx=pcx+x,cz=pcz+z,k=key(cx,cz);wanted.add(k);if(!chunks.has(k))createChunk(cx,cz);
+    const cx=pcx+x,cz=pcz+z,k=key(cx,cz);wanted.add(k);if(!chunks.has(k))missing.push([cx,cz]);
   }
+  if(missing.length)createChunk(missing[0][0],missing[0][1]);
   for(const [k,c] of chunks)if(!wanted.has(k))unloadChunk(c.cx,c.cz);
-  
 }
 function solid(x,y,z){
   const b=broken.has(`${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`)?B.AIR:getBlock(Math.floor(x),Math.floor(y),Math.floor(z));
@@ -363,7 +363,7 @@ function initial(){
   const startX=0,startZ=0;
   player.position.set(startX+.5,getHeight(startX,startZ)+1.05,startZ+.5);
   cameraUpdate();
-  updateChunks();
+  createChunk(0,0);
   const l=document.getElementById('loading');
   const p=document.getElementById('progress');
   if(p)p.style.width='100%';
