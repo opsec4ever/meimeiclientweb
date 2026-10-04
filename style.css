@@ -116,3 +116,20 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
 #survival-hud .offhand-slot{background:#3b3b3b url('https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/gui/sprites/hud/hotbar_offhand_left.png') center/40px 40px no-repeat!important;border:0!important;box-shadow:none!important}
 #survival-hud .offhand-slot:before{display:none!important}
 
+
+#scoreboard{position:fixed;right:18px;top:38px;width:190px;color:#fff;font:14px Minecraftia,monospace;text-align:right;text-shadow:2px 2px #000;z-index:70;pointer-events:auto}
+#scoreboard .score-title{color:#fff;font-size:16px;margin-bottom:10px}
+#scoreboard .score-row{display:flex;justify-content:flex-end;gap:0}
+#scoreboard .score-balance:first-child{color:#55ff55}
+#scoreboard .score-balance:last-child{color:#fff}
+#debug-panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5000;display:none;color:#fff;font:11px Minecraftia,monospace}
+#debug-panel.open{display:block}
+.dbg-box{width:390px;padding:18px;background:rgba(15,15,18,.97);border:2px solid #777;box-shadow:5px 5px #000}
+.dbg-title{font-size:16px;margin-bottom:14px;color:#b06cff}
+.dbg-box label{display:block;margin:8px 0}.dbg-box input{float:right;width:210px;background:#222;color:#fff;border:1px solid #555;padding:5px;font:10px Minecraftia,monospace}
+.dbg-row{display:flex;gap:8px;clear:both;margin-top:14px}.dbg-row button,.dbg-text-row button{background:#8e4cff;color:#fff;border:1px solid #6d35ba;padding:7px;font:9px Minecraftia,monospace}
+.dbg-help{margin-top:12px;color:#888;font-size:8px;clear:both}
+.dbg-text-row{display:flex;gap:5px;margin-top:5px}.dbg-text-row input:first-child{float:none;width:180px}.dbg-text-row input[type=color]{float:none;width:35px;padding:0}
+.custom-hud{position:fixed;z-index:1001;color:#fff;font:12px Minecraftia,monospace;text-shadow:2px 2px #000;cursor:move;user-select:none}
+#hud-cover{position:fixed;left:0;bottom:0;width:100%;height:110px;object-fit:fill;z-index:998;pointer-events:none}
+#fps,#cps{cursor:move;pointer-events:auto}
