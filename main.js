@@ -64,7 +64,7 @@ const materials={
   deepslateCoal:mat(oreTextures.deepslateCoal),deepslateIron:mat(oreTextures.deepslateIron),deepslateCopper:mat(oreTextures.deepslateCopper),deepslateGold:mat(oreTextures.deepslateGold),deepslateRedstone:mat(oreTextures.deepslateRedstone),deepslateDiamond:mat(oreTextures.deepslateDiamond),deepslateEmerald:mat(oreTextures.deepslateEmerald)
 };
 
-const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7,DEEPSLATE:8,COAL:9,IRON:10,COPPER:11,GOLD:12,REDSTONE:13,DIAMOND:14,EMERALD:15};
+const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7,DEEPSLATE:8,COAL:9,IRON:10,COPPER:11,GOLD:12,REDSTONE:13,DIAMOND:14,EMERALD:15,DEEPSLATE_COAL:16,DEEPSLATE_IRON:17,DEEPSLATE_COPPER:18,DEEPSLATE_GOLD:19,DEEPSLATE_REDSTONE:20,DEEPSLATE_DIAMOND:21,DEEPSLATE_EMERALD:22};
 const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D(),broken=new Set();
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
@@ -112,13 +112,13 @@ function getBlock(x,y,z){
   if(y>h-4)return h<=WATER_LEVEL+1?B.SAND:B.DIRT;
   const n=oreNoise(x,y,z);
   const deep=y<9;
-  if(y<=30&&n>.975)return deep?B.COAL:B.COAL;
-  if(y<=28&&n>.985)return B.IRON;
-  if(y<=30&&n>.991)return B.COPPER;
-  if(y<=20&&n>.995)return B.GOLD;
-  if(y<=16&&n>.997)return B.REDSTONE;
-  if(y<=16&&n>.9985)return B.DIAMOND;
-  if(y<=30&&n>.9992&&Math.abs(x+z)%7===0)return B.EMERALD;
+  if(y<=30&&n>.975)return deep?B.DEEPSLATE_COAL:B.COAL;
+  if(y<=28&&n>.985)return deep?B.DEEPSLATE_IRON:B.IRON;
+  if(y<=30&&n>.991)return deep?B.DEEPSLATE_COPPER:B.COPPER;
+  if(y<=20&&n>.995)return deep?B.DEEPSLATE_GOLD:B.GOLD;
+  if(y<=16&&n>.997)return deep?B.DEEPSLATE_REDSTONE:B.REDSTONE;
+  if(y<=16&&n>.9985)return deep?B.DEEPSLATE_DIAMOND:B.DIAMOND;
+  if(y<=30&&n>.9992&&Math.abs(x+z)%7===0)return deep?B.DEEPSLATE_EMERALD:B.EMERALD;
   return deep?B.DEEPSLATE:B.STONE;
 }
 function isTree(x,z){
@@ -139,7 +139,7 @@ function treeBlocks(x,z){
 function key(cx,cz){return `${cx},${cz}`}
 function material(type){
   return type===B.GRASS?materials.grass:type===B.DIRT?materials.dirt:type===B.STONE?materials.stone:
-    type===B.SAND?materials.sand:type===B.WOOD?materials.wood:type===B.LEAVES?materials.leaves:type===B.WATER?materials.water:type===B.DEEPSLATE?materials.deepslate:type===B.COAL?materials.coal:type===B.IRON?materials.iron:type===B.COPPER?materials.copper:type===B.GOLD?materials.gold:type===B.REDSTONE?materials.redstone:type===B.DIAMOND?materials.diamond:materials.emerald;
+    type===B.SAND?materials.sand:type===B.WOOD?materials.wood:type===B.LEAVES?materials.leaves:type===B.WATER?materials.water:type===B.DEEPSLATE?materials.deepslate:type===B.COAL?materials.coal:type===B.IRON?materials.iron:type===B.COPPER?materials.copper:type===B.GOLD?materials.gold:type===B.REDSTONE?materials.redstone:type===B.DIAMOND?materials.diamond:type===B.EMERALD?materials.emerald:type===B.DEEPSLATE_COAL?materials.deepslateCoal:type===B.DEEPSLATE_IRON?materials.deepslateIron:type===B.DEEPSLATE_COPPER?materials.deepslateCopper:type===B.DEEPSLATE_GOLD?materials.deepslateGold:type===B.DEEPSLATE_REDSTONE?materials.deepslateRedstone:type===B.DEEPSLATE_DIAMOND?materials.deepslateDiamond:materials.deepslateEmerald;
 }
 function createChunk(cx,cz){
   const k=key(cx,cz);if(chunks.has(k))return;
