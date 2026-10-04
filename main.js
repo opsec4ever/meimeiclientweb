@@ -26,15 +26,33 @@ const loader=new THREE.TextureLoader();
 function tx(b){const t=loader.load('data:image/png;base64,'+b);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t;}
 const textures={grassTop:tx(TEX.grassTop),grassSide:tx(TEX.grassSide),dirt:tx(TEX.dirt),stone:tx(TEX.stone),sand:tx(TEX.sand),oak:tx(TEX.oak),oakTop:tx(TEX.oakTop),leaves:tx(TEX.leaves),water:tx(TEX.water)};
 function mat(map,extra={}){return new THREE.MeshLambertMaterial({map,...extra});}
-
-
+function pixelOreTexture(base,accent,seed){
+  const c=document.createElement('canvas');c.width=16;c.height=16;
+  const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.fillStyle=base;x.fillRect(0,0,16,16);
+  let n=seed>>>0;
+  const rnd=()=>{n=Math.imul(n^n>>>16,2246822519);n=Math.imul(n^n>>>13,3266489917);return (n>>>0)/4294967295};
+  for(let i=0;i<42;i++){const v=Math.floor(rnd()*24);x.fillStyle=v<4?'#1b1b1d':v<9?'#55575a':base;x.fillRect(Math.floor(rnd()*16),Math.floor(rnd()*16),1+(rnd()>.8?1:0),1);}
+  for(let i=0;i<7;i++){x.fillStyle=accent;const px=2+Math.floor(rnd()*12),py=2+Math.floor(rnd()*12);x.fillRect(px,py,1,1);if(rnd()>.35)x.fillRect(px+1,py,1,1);if(rnd()>.55)x.fillRect(px,py+1,1,1);}
+  const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t;
+}
+const oreTextures={
+  deepslate:pixelOreTexture('#484a4f','#686a70',11),
+  coal:pixelOreTexture('#777777','#171717',21),
+  iron:pixelOreTexture('#777777','#d39b7b',31),
+  copper:pixelOreTexture('#777777','#c86f4b',41),
+  gold:pixelOreTexture('#777777','#f4c84b',51),
+  redstone:pixelOreTexture('#777777','#c83232',61),
+  diamond:pixelOreTexture('#777777','#35dce5',71),
+  emerald:pixelOreTexture('#777777','#36c978',81)
+};
 const materials={
   grass:[mat(textures.grassSide),mat(textures.grassSide),mat(textures.grassTop,{color:0x91bd59}),mat(textures.dirt),mat(textures.grassSide),mat(textures.grassSide)],
   dirt:mat(textures.dirt),stone:mat(textures.stone),sand:mat(textures.sand),
   wood:[mat(textures.oak),mat(textures.oak),mat(textures.oakTop),mat(textures.oakTop),mat(textures.oak),mat(textures.oak)],
   leaves:mat(textures.leaves,{transparent:true,alphaTest:.1,color:0x77ab3a}),
   water:mat(textures.water,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),
-  deepslate:mat(textures.stone,{color:0x5b5b61}),coal:mat(textures.stone,{color:0x25252a}),iron:mat(textures.stone,{color:0xc49a7a}),copper:mat(textures.stone,{color:0xb66a48}),gold:mat(textures.stone,{color:0xf2c94c}),redstone:mat(textures.stone,{color:0xc63b32}),diamond:mat(textures.stone,{color:0x36d7df}),emerald:mat(textures.stone,{color:0x38c978})
+  deepslate:mat(oreTextures.deepslate),coal:mat(oreTextures.coal),iron:mat(oreTextures.iron),copper:mat(oreTextures.copper),
+  gold:mat(oreTextures.gold),redstone:mat(oreTextures.redstone),diamond:mat(oreTextures.diamond),emerald:mat(oreTextures.emerald)
 };
 
 const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7,DEEPSLATE:8,COAL:9,IRON:10,COPPER:11,GOLD:12,REDSTONE:13,DIAMOND:14,EMERALD:15};
@@ -83,16 +101,16 @@ function getBlock(x,y,z){
   if(y>h)return y<=WATER_LEVEL?B.WATER:B.AIR;
   if(y===h)return h<=WATER_LEVEL+1?B.SAND:B.GRASS;
   if(y>h-4)return h<=WATER_LEVEL+1?B.SAND:B.DIRT;
-  if(y<9)return B.DEEPSLATE;
   const n=oreNoise(x,y,z);
-  if(y<=30&&n>.994)return B.COAL;
-  if(y<=28&&n>.997)return B.IRON;
-  if(y<=30&&n>.9985)return B.COPPER;
-  if(y<=20&&n>.9990)return B.GOLD;
-  if(y<=14&&n>.99935)return B.REDSTONE;
-  if(y<=16&&n>.9997)return B.DIAMOND;
-  if(y<=30&&n>.99985&&Math.abs(x+z)%7===0)return B.EMERALD;
-  return B.STONE;
+  const deep=y<9;
+  if(y<=30&&n>.975)return B.COAL;
+  if(y<=28&&n>.985)return B.IRON;
+  if(y<=30&&n>.991)return B.COPPER;
+  if(y<=20&&n>.995)return B.GOLD;
+  if(y<=16&&n>.997)return B.REDSTONE;
+  if(y<=16&&n>.9985)return B.DIAMOND;
+  if(y<=30&&n>.9992&&Math.abs(x+z)%7===0)return B.EMERALD;
+  return deep?B.DEEPSLATE:B.STONE;
 }
 function isTree(x,z){
   const h=getHeight(x,z);
