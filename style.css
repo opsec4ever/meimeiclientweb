@@ -112,3 +112,6 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
   background:#252516;
   box-shadow:inset 1px 1px 0 #343424,inset -1px -1px 0 #16160e;
 }
+
+#survival-hud .offhand-slot{background:#3b3b3b url('https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/gui/sprites/hud/hotbar_offhand_left.png') center/40px 40px no-repeat!important;border:0!important;box-shadow:none!important}
+#survival-hud .offhand-slot:before{display:none!important}
