@@ -117,10 +117,11 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
 #survival-hud .offhand-slot:before{display:none!important}
 
 
-#scoreboard{position:fixed;right:8px;top:8px;width:210px;color:#fff;font:16px Minecraftia,monospace;text-shadow:2px 2px #000;z-index:70;pointer-events:auto;text-align:right}
-#scoreboard .score-title{display:block;color:#fff;font-size:16px;line-height:20px;margin-bottom:7px}
-#scoreboard .score-line{display:flex;justify-content:flex-end;align-items:baseline;font-size:14px;line-height:18px}
-#scoreboard .score-dollar{color:#55ff55}
-#scoreboard .score-value{color:#fff}
-#hud-cover{position:fixed;left:0;bottom:0;width:100%;height:110px;object-fit:fill;z-index:998;pointer-events:none}
+#scoreboard{position:fixed;right:8px;top:8px;width:180px;color:#fff;font:10px 'Minecraftia',monospace;text-shadow:2px 2px 0 #000;z-index:70;pointer-events:auto;text-align:right}
+#scoreboard .score-title{display:block;color:#fff;font-size:10px;line-height:16px;margin:0 0 3px;text-align:center;white-space:nowrap}
+#scoreboard .score-line{display:flex;justify-content:space-between;align-items:baseline;font-size:9px;line-height:14px;white-space:nowrap}
+#scoreboard .score-name{color:#fff;text-align:left}
+#scoreboard .score-balance{color:#fff;text-align:right}
+#scoreboard .score-balance span{color:#55ff55}
+#hud-cover{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:430px;height:82px;object-fit:fill;z-index:998;pointer-events:none}
 #fps,#cps{cursor:move;pointer-events:auto}
