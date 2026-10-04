@@ -123,7 +123,8 @@ function createChunk(cx,cz){
   }
   const meshes=[];
   for(const [type,list] of groups){
-    const mesh=new THREE.InstancedMesh(geometry,material(type),list.length);\n    mesh.frustumCulled=false;
+    const mesh=new THREE.InstancedMesh(geometry,material(type),list.length);
+    mesh.frustumCulled=false;
     mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
     for(let i=0;i<list.length;i++){
       const b=list[i];temp.position.set(b.x+.5,b.y+.5,b.z+.5);temp.rotation.set(0,0,0);temp.scale.set(1,1,1);temp.updateMatrix();mesh.setMatrixAt(i,temp.matrix);
