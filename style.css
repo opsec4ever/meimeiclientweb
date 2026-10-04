@@ -34,16 +34,19 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
  .start-box{width:min(88vw,430px);padding:24px}
  .mobile-help{display:inline}
 }
-#survival-hud{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);z-index:25;pointer-events:none;width:min(364px,92vw);font-family:'SlightlyImproved',monospace;image-rendering:pixelated}
-.status-row{display:flex;justify-content:space-between;align-items:center;margin:0 5px 2px}
+
+#survival-hud{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);z-index:40;width:364px;font-family:'Minecraftia',monospace;image-rendering:pixelated;pointer-events:none}
+.hud-top{width:364px;display:flex;justify-content:space-between;padding:0 3px 1px}
 .hearts,.food{display:flex;gap:1px}
-.hearts img,.food img{width:18px;height:18px;image-rendering:pixelated}
-.xp-row{height:8px;position:relative;margin:0 5px 3px}
-.xp-bar{height:6px;border:1px solid #111;background:#222;box-shadow:inset 0 1px #555}
-.xp-fill{width:35%;height:100%;background:#75d23c}
-.xp-level{position:absolute;left:50%;top:-9px;transform:translateX(-50%);color:#80e34b;font-size:10px;text-shadow:2px 2px #000}
-.hotbar{width:364px;height:44px;background:url('https://mcasset.cloud/26.3/assets/minecraft/textures/gui/sprites/hud/hotbar.png') center/364px 44px no-repeat}
-.slots{display:grid;grid-template-columns:repeat(9,1fr);width:100%;height:100%}
-.slot{position:relative;width:40px;height:44px}
-.slot.selected{background:url('https://mcasset.cloud/26.3/assets/minecraft/textures/gui/sprites/hud/hotbar_selection.png') center/48px 48px no-repeat}
-@media (max-width:800px){#survival-hud{bottom:7px;transform:translateX(-50%) scale(.78);transform-origin:bottom center}}
+.heart,.food-icon{display:block;width:18px;height:18px;background-repeat:no-repeat;background-position:center;background-size:18px 18px}
+.heart{background-image:url('https://mcasset.cloud/26.3/assets/minecraft/textures/gui/sprites/hud/heart/full.png')}
+.food-icon{background-image:url('https://mcasset.cloud/26.3/assets/minecraft/textures/gui/sprites/hud/food_full.png')}
+.xp-wrap{height:8px;width:364px;position:relative;margin-bottom:2px;background:url('https://mcasset.cloud/26.3/assets/minecraft/textures/gui/sprites/hud/experience_bar_background.png') center/364px 8px no-repeat}
+.xp-fill{position:absolute;left:1px;top:2px;width:35%;height:4px;background:#80d52b;box-shadow:0 1px #247514}
+.xp-level{position:absolute;left:50%;top:-5px;transform:translateX(-50%);font-size:10px;color:#80d52b;text-shadow:2px 2px #000}
+.hotbar{position:relative;width:364px;height:44px;background:url('https://mcasset.cloud/26.3/assets/minecraft/textures/gui/sprites/hud/hotbar.png') center/364px 44px no-repeat}
+.hotbar-slots{position:absolute;inset:0;display:grid;grid-template-columns:repeat(9,1fr)}
+.hotbar-slot{height:44px}
+.hotbar-selection{position:absolute;left:0;top:-2px;width:44px;height:48px;background:url('https://mcasset.cloud/26.3/assets/minecraft/textures/gui/sprites/hud/hotbar_selection.png') center/48px 48px no-repeat}
+#break-overlay{display:none;position:fixed;left:50%;top:50%;width:64px;height:64px;transform:translate(-50%,-50%);z-index:35;pointer-events:none;background-position:center;background-repeat:no-repeat;background-size:64px 64px}
+@media(max-width:800px){#survival-hud{transform:translateX(-50%) scale(.8);transform-origin:bottom center;bottom:4px}}
