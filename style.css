@@ -4,8 +4,8 @@ body{user-select:none}
 #game{position:fixed;inset:0}
 canvas{display:block}
 #crosshair{position:fixed;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);pointer-events:none;z-index:10}
-#crosshair span:first-child{position:absolute;left:8px;top:1px;width:2px;height:16px;background:#fff;box-shadow:1px 1px 0 #000}
-#crosshair span:last-child{position:absolute;left:1px;top:8px;width:16px;height:2px;background:#fff;box-shadow:1px 1px 0 #000}
+#crosshair span:first-child{position:absolute;left:8px;top:1px;width:2px;height:16px;background:#fff;}
+#crosshair span:last-child{position:absolute;left:1px;top:8px;width:16px;height:2px;background:#fff;}
 #hud{position:fixed;top:14px;left:14px;z-index:20;color:#fff;font-size:11px;line-height:1.9;text-shadow:2px 2px 0 #000;pointer-events:none}
 .title{color:#b06cff;font-size:13px;margin-bottom:3px}
 #loading{position:fixed;inset:0;z-index:100;background:#101010;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .5s}
@@ -21,3 +21,16 @@ button{width:100%;height:48px;border:2px solid #6d35ba;background:#8e4cff;color:
 button:hover{background:#a56aff}
 button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
 .controls{color:#777;font-size:8px;line-height:2;margin-top:24px}
+#mobile{display:none;position:fixed;inset:0;z-index:30;pointer-events:none}
+#stick{position:absolute;left:24px;bottom:28px;width:116px;height:116px;border:2px solid rgba(255,255,255,.25);border-radius:50%;background:rgba(0,0,0,.2);pointer-events:auto;touch-action:none}
+#stick-knob{position:absolute;left:38px;top:38px;width:36px;height:36px;border-radius:50%;background:rgba(142,76,255,.75);pointer-events:none}
+#mobile-buttons{position:absolute;right:20px;bottom:30px;display:flex;gap:10px;pointer-events:auto}
+#mobile-buttons button{width:82px;height:48px;font-size:9px;box-shadow:none;touch-action:none}
+@media (pointer:coarse),(max-width:800px){
+ #hud{top:calc(10px + env(safe-area-inset-top));left:10px;font-size:9px}
+ #crosshair{width:14px;height:14px}
+ #crosshair span:first-child{left:6px;top:1px;height:12px;width:2px}
+ #crosshair span:last-child{left:1px;top:6px;width:12px;height:2px}
+ .start-box{width:min(88vw,430px);padding:24px}
+ .mobile-help{display:inline}
+}
