@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
-const CHUNK_SIZE=16,WORLD_HEIGHT=mobile?40:64,RENDER_DISTANCE=mobile?0:2,WATER_LEVEL=mobile?15:20,seed=928374;
+const CHUNK_SIZE=16,WORLD_MIN=-64,WORLD_MAX=320,RENDER_DISTANCE=mobile?0:2,WATER_LEVEL=63,seed=928374;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x78a9d5);
 scene.fog=new THREE.Fog(0x78a9d5,70,190);
@@ -23,7 +23,7 @@ scene.add(sun);
 
 const ASSET_BASE='https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/block/';
 const loader=new THREE.TextureLoader();
-function tx(name,animated=false){const t=loader.load(ASSET_BASE+name+'.png',()=>{if(animated&&t.image?.height>t.image?.width){const frames=Math.max(1,Math.round(t.image.height/t.image.width));t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,1/frames);t.offset.y=0;t.needsUpdate=true}});t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t}
+function tx(name,frames=1){const t=loader.load(ASSET_BASE+name+'.png',()=>{if(frames>1){t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,1/frames);t.offset.y=0;t.needsUpdate=true}});t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t}
 const textures={
   grassTop:tx('grass_block_top'),
   grassSide:tx('grass_block_side'),
@@ -33,7 +33,7 @@ const textures={
   oak:tx('oak_log'),
   oakTop:tx('oak_log_top'),
   leaves:tx('oak_leaves'),
-  water:tx('water_still',true)
+  waterStill:tx('water_still',32),waterFlow:tx('water_flow',32)
 };
 function mat(map,extra={}){return new THREE.MeshLambertMaterial({map,...extra})}
 const oreTextures={
@@ -59,7 +59,7 @@ const materials={
   dirt:mat(textures.dirt),stone:mat(textures.stone),sand:mat(textures.sand),
   wood:[mat(textures.oak),mat(textures.oak),mat(textures.oakTop),mat(textures.oakTop),mat(textures.oak),mat(textures.oak)],
   leaves:mat(textures.leaves,{transparent:true,alphaTest:.1,color:0x77ab3a}),
-  water:mat(textures.water,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),
+  water:[mat(textures.waterFlow,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),mat(textures.waterFlow,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),mat(textures.waterStill,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),mat(textures.waterStill,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),mat(textures.waterFlow,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),mat(textures.waterFlow,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide})]),
   bedrock:mat(oreTextures.bedrock),deepslate:mat(oreTextures.deepslate),coal:mat(oreTextures.coal),iron:mat(oreTextures.iron),copper:mat(oreTextures.copper),
   gold:mat(oreTextures.gold),redstone:mat(oreTextures.redstone),diamond:mat(oreTextures.diamond),emerald:mat(oreTextures.emerald),
   deepslateCoal:mat(oreTextures.deepslateCoal),deepslateIron:mat(oreTextures.deepslateIron),deepslateCopper:mat(oreTextures.deepslateCopper),deepslateGold:mat(oreTextures.deepslateGold),deepslateRedstone:mat(oreTextures.deepslateRedstone),deepslateDiamond:mat(oreTextures.deepslateDiamond),deepslateEmerald:mat(oreTextures.deepslateEmerald)
@@ -68,13 +68,14 @@ const materials={
 const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7,DEEPSLATE:8,COAL:9,IRON:10,COPPER:11,GOLD:12,REDSTONE:13,DIAMOND:14,EMERALD:15,DEEPSLATE_COAL:16,DEEPSLATE_IRON:17,DEEPSLATE_COPPER:18,DEEPSLATE_GOLD:19,DEEPSLATE_REDSTONE:20,DEEPSLATE_DIAMOND:21,DEEPSLATE_EMERALD:22,BEDROCK:23};
 const hotbarTypes=[B.GRASS,B.DIRT,B.STONE,B.SAND,B.WOOD,B.LEAVES,B.DEEPSLATE,B.STONE,B.BEDROCK];
 function addToInventory(type){const i=hotbarTypes.indexOf(type);if(i>=0){inventoryCounts[i]++;updateInventoryUI();return true}return false}
-function updateInventoryUI(){document.querySelectorAll('.hotbar-slot').forEach((el,i)=>{let n=el.querySelector('.item-count');if(!n){n=document.createElement('span');n.className='item-count';el.appendChild(n)}n.textContent=inventoryCounts[i]||''})}
+function updateInventoryUI(){document.querySelectorAll('.hotbar-slot').forEach((el,i)=>{let n=el.querySelector('.item-count');if(!n){n=document.createElement('span');n.className='item-count';el.appendChild(n)}n.textContent=inventoryCounts[i]||'';el.style.backgroundImage=`url(${HOTBAR_ICONS[i]})`;el.style.backgroundRepeat='no-repeat';el.style.backgroundPosition='center';el.style.backgroundSize='28px 28px'})}
 let placeRotation=0;
 const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D(),broken=new Set(),placed=new Map(),drops=[];
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
 let yaw=0,pitch=0,locked=false,gameStarted=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0,selectedSlot=0,cps=0,clickTimes=[],inventoryOpen=false;
 const inventoryCounts=new Array(9).fill(0);
+const HOTBAR_ICONS=['grass_block_top','dirt','stone','sand','oak_log','oak_leaves','deepslate','stone','bedrock'].map(n=>ASSET_BASE+n+'.png');
 
 const clock=new THREE.Clock();
 
@@ -105,26 +106,48 @@ function fbm(x,z){
   return value/total;
 }
 function getHeight(x,z){
-  const continental=fbm(x,z),hills=noise2D(x,z,42);
-  let h=16+continental*18+hills*6;
-  return Math.max(4,Math.min(WORLD_HEIGHT-5,Math.floor(h)));
+  const continental=fbm(x,z);
+  const hills=noise2D(x+1700,z-900,70);
+  const ridges=Math.abs(noise2D(x-2400,z+1800,180)-.5)*2;
+  let h=62+(continental-.5)*52+(hills-.5)*26+ridges*22;
+  return Math.max(-20,Math.min(255,Math.floor(h)));
+}
+function hash3(x,y,z){
+  let h=seed|0;
+  h=Math.imul(h^Math.imul(x|0,374761393),668265263);
+  h=Math.imul(h^Math.imul(y|0,1274126177),2246822519);
+  h=Math.imul(h^Math.imul(z|0,3266489917),1597334677);
+  h^=h>>>16;h=Math.imul(h,0x45d9f3b);h^=h>>>16;
+  return (h>>>0)/4294967295;
+}
+function caveNoise(x,y,z){
+  const a=hash3(Math.floor(x/7),Math.floor(y/6),Math.floor(z/7));
+  const b=hash3(Math.floor(x/13),Math.floor(y/9),Math.floor(z/13));
+  return a*.62+b*.38;
+}
+function isCave(x,y,z,h){
+  if(y>-4||y<-58||y>h-4)return false;
+  const n=caveNoise(x,y,z);
+  const large=Math.sin(x*.075+y*.11+z*.045)*.5+.5;
+  return n>.79&&large>.28;
 }
 function oreNoise(x,y,z){return hash2D(x*31+y*17,z*47+y*13)}
 function getBlock(x,y,z){
-  if(y<0||y>=WORLD_HEIGHT)return B.AIR;
+  if(y<WORLD_MIN||y>WORLD_MAX)return B.AIR;
   const wk=[Math.floor(x),Math.floor(y),Math.floor(z)].join(',');
   if(placed.has(wk))return placed.get(wk).type;
   if(broken.has(wk))return B.AIR;
-  if(y===0)return B.BEDROCK;
+  if(y<=-64)return B.BEDROCK;
   const h=getHeight(x,z);
   if(y>h)return y<=WATER_LEVEL?B.WATER:B.AIR;
+  if(isCave(x,y,z,h))return y<8&&caveNoise(x,y,z)>.965?B.WATER:B.AIR;
   if(y===h)return h<=WATER_LEVEL+1?B.SAND:B.GRASS;
   if(y>h-4)return h<=WATER_LEVEL+1?B.SAND:B.DIRT;
   const n=oreNoise(x,y,z);
-  const deep=y<9;
+  const deep=y<0;
   if(y<=30&&n>.975)return deep?B.DEEPSLATE_COAL:B.COAL;
   if(y<=28&&n>.985)return deep?B.DEEPSLATE_IRON:B.IRON;
-  if(y<=30&&n>.991)return deep?B.DEEPSLATE_COPPER:B.COPPER;
+  if(y<=48&&n>.991)return deep?B.DEEPSLATE_COPPER:B.COPPER;
   if(y<=20&&n>.995)return deep?B.DEEPSLATE_GOLD:B.GOLD;
   if(y<=16&&n>.997)return deep?B.DEEPSLATE_REDSTONE:B.REDSTONE;
   if(y<=16&&n>.9985)return deep?B.DEEPSLATE_DIAMOND:B.DIAMOND;
@@ -156,17 +179,17 @@ function createChunk(cx,cz){
   const blocks=[],sx=cx*CHUNK_SIZE,sz=cz*CHUNK_SIZE;
   for(let x=0;x<CHUNK_SIZE;x++)for(let z=0;z<CHUNK_SIZE;z++){
     const wx=sx+x,wz=sz+z,h=getHeight(wx,wz);
-    const bottom=mobile?Math.max(0,h-5):0;
+    const bottom=WORLD_MIN;
     for(let y=bottom;y<=h;y++){const type=getBlock(wx,y,wz);if(type!==B.AIR&&!broken.has(`${wx},${y},${wz}`))blocks.push({x:wx,y,z:wz,type})}
     if(!mobile&&isTree(wx,wz))for(const tb of treeBlocks(wx,wz))if(!broken.has([tb.x,tb.y,tb.z].join(','))&&!placed.has([tb.x,tb.y,tb.z].join(',')))blocks.push(tb);
-    if(h<WATER_LEVEL)blocks.push({x:wx,y:WATER_LEVEL,z:wz,type:B.WATER});
+    if(h<WATER_LEVEL)for(let wy=h+1;wy<=WATER_LEVEL;wy++)blocks.push({x:wx,y:wy,z:wz,type:B.WATER});
   }
-  for(const [pk,pb] of placed){const q=pk.split(',').map(Number);if(Math.floor(q[0]/CHUNK_SIZE)===cx&&Math.floor(q[2]/CHUNK_SIZE)===cz&&q[1]>getHeight(q[0],q[2])&&q[1]<WORLD_HEIGHT)blocks.push({x:q[0],y:q[1],z:q[2],type:pb.type,rot:pb.rot||0})}
+  for(const [pk,pb] of placed){const q=pk.split(',').map(Number);if(Math.floor(q[0]/CHUNK_SIZE)===cx&&Math.floor(q[2]/CHUNK_SIZE)===cz&&q[1]>getHeight(q[0],q[2])&&q[1]<=WORLD_MAX)blocks.push({x:q[0],y:q[1],z:q[2],type:pb.type,rot:pb.rot||0})}
   const groups=new Map();
   for(const block of blocks){
     const n=[[block.x+1,block.y,block.z],[block.x-1,block.y,block.z],[block.x,block.y+1,block.z],[block.x,block.y-1,block.z],[block.x,block.y,block.z+1],[block.x,block.y,block.z-1]];
     let visible=false;
-    for(const [nx,ny,nz] of n){const nb=broken.has(`${nx},${ny},${nz}`)?B.AIR:getBlock(nx,ny,nz);if(nb===B.AIR||nb===B.WATER||(block.type===B.WATER&&nb!==B.WATER)){visible=true;break}}
+    for(const [nx,ny,nz] of n){const nb=broken.has(`${nx},${ny},${nz}`)?B.AIR:getBlock(nx,ny,nz);if(nb===B.AIR||nb===B.WATER){visible=true;break}}
     if(!visible)continue;
     if(!groups.has(block.type))groups.set(block.type,[]);
     groups.get(block.type).push(block);
@@ -218,7 +241,7 @@ function move(dt){
   player.position.z+=player.velocity.z*dt;if(collides(player.position)){player.position.z=old.z;player.velocity.z=0}
   player.position.y+=player.velocity.y*dt;
   if(collides(player.position)){player.position.y=old.y;if(player.velocity.y<0)player.onGround=true;player.velocity.y=0}else player.onGround=false;
-  if(player.position.y<-30){player.position.set(0,getHeight(0,0)+3,0);player.velocity.set(0,0,0)}
+  if(player.position.y<WORLD_MIN-10){player.position.set(0,getHeight(0,0)+3,0);player.velocity.set(0,0,0)}
 }
 function cameraUpdate(){camera.position.set(player.position.x,player.position.y+1.62,player.position.z);camera.rotation.y=yaw;camera.rotation.x=pitch}
 let breaking=false,breakTarget=null,breakStart=0,breakDuration=0,breakStage=-1;
@@ -260,7 +283,7 @@ function placeBlock(){
   if(!gameStarted||inventoryOpen||mobile)return;
   const hit=rayBlock();if(!hit)return;
   const nx=hit.x+Math.round(hit.normal.x),ny=hit.y+Math.round(hit.normal.y),nz=hit.z+Math.round(hit.normal.z);
-  if(ny<1||ny>=WORLD_HEIGHT)return;
+  if(ny<WORLD_MIN+1||ny>WORLD_MAX)return;
   const k=[nx,ny,nz].join(',');
   if(getBlock(nx,ny,nz)!==B.AIR)return;
   const type=hotbarTypes[selectedSlot];if(type===B.BEDROCK||inventoryCounts[selectedSlot]<=0)return;
