@@ -23,7 +23,7 @@ scene.add(sun);
 
 const ASSET_BASE='https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/block/';
 const loader=new THREE.TextureLoader();
-function tx(name){const t=loader.load(ASSET_BASE+name+'.png');t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t}
+function tx(name,animated=false){const t=loader.load(ASSET_BASE+name+'.png',()=>{if(animated&&t.image?.height>t.image?.width){const frames=Math.max(1,Math.round(t.image.height/t.image.width));t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,1/frames);t.offset.y=0;t.needsUpdate=true}});t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t}
 const textures={
   grassTop:tx('grass_block_top'),
   grassSide:tx('grass_block_side'),
@@ -33,7 +33,7 @@ const textures={
   oak:tx('oak_log'),
   oakTop:tx('oak_log_top'),
   leaves:tx('oak_leaves'),
-  water:tx('water_still')
+  water:tx('water_still',true)
 };
 function mat(map,extra={}){return new THREE.MeshLambertMaterial({map,...extra})}
 const oreTextures={
@@ -45,6 +45,7 @@ const oreTextures={
   redstone:tx('redstone_ore'),
   diamond:tx('diamond_ore'),
   emerald:tx('emerald_ore'),
+  bedrock:tx('bedrock'),
   deepslateCoal:tx('deepslate_coal_ore'),
   deepslateIron:tx('deepslate_iron_ore'),
   deepslateCopper:tx('deepslate_copper_ore'),
@@ -64,8 +65,10 @@ const materials={
   deepslateCoal:mat(oreTextures.deepslateCoal),deepslateIron:mat(oreTextures.deepslateIron),deepslateCopper:mat(oreTextures.deepslateCopper),deepslateGold:mat(oreTextures.deepslateGold),deepslateRedstone:mat(oreTextures.deepslateRedstone),deepslateDiamond:mat(oreTextures.deepslateDiamond),deepslateEmerald:mat(oreTextures.deepslateEmerald)
 };
 
-const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7,DEEPSLATE:8,COAL:9,IRON:10,COPPER:11,GOLD:12,REDSTONE:13,DIAMOND:14,EMERALD:15,DEEPSLATE_COAL:16,DEEPSLATE_IRON:17,DEEPSLATE_COPPER:18,DEEPSLATE_GOLD:19,DEEPSLATE_REDSTONE:20,DEEPSLATE_DIAMOND:21,DEEPSLATE_EMERALD:22};
-const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D(),broken=new Set();
+const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7,DEEPSLATE:8,COAL:9,IRON:10,COPPER:11,GOLD:12,REDSTONE:13,DIAMOND:14,EMERALD:15,DEEPSLATE_COAL:16,DEEPSLATE_IRON:17,DEEPSLATE_COPPER:18,DEEPSLATE_GOLD:19,DEEPSLATE_REDSTONE:20,DEEPSLATE_DIAMOND:21,DEEPSLATE_EMERALD:22,BEDROCK:23};
+const hotbarTypes=[B.GRASS,B.DIRT,B.STONE,B.SAND,B.WOOD,B.LEAVES,B.DEEPSLATE,B.STONE,B.BEDROCK];
+let placeRotation=0;
+const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D(),broken=new Set(),placed=new Map(),drops=[];
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
 let yaw=0,pitch=0,locked=false,gameStarted=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0,selectedSlot=0,cps=0,clickTimes=[],inventoryOpen=false;
@@ -106,6 +109,10 @@ function getHeight(x,z){
 function oreNoise(x,y,z){return hash2D(x*31+y*17,z*47+y*13)}
 function getBlock(x,y,z){
   if(y<0||y>=WORLD_HEIGHT)return B.AIR;
+  const wk=[Math.floor(x),Math.floor(y),Math.floor(z)].join(',');
+  if(placed.has(wk))return placed.get(wk).type;
+  if(broken.has(wk))return B.AIR;
+  if(y===0)return B.BEDROCK;
   const h=getHeight(x,z);
   if(y>h)return y<=WATER_LEVEL?B.WATER:B.AIR;
   if(y===h)return h<=WATER_LEVEL+1?B.SAND:B.GRASS;
@@ -139,7 +146,7 @@ function treeBlocks(x,z){
 function key(cx,cz){return `${cx},${cz}`}
 function material(type){
   return type===B.GRASS?materials.grass:type===B.DIRT?materials.dirt:type===B.STONE?materials.stone:
-    type===B.SAND?materials.sand:type===B.WOOD?materials.wood:type===B.LEAVES?materials.leaves:type===B.WATER?materials.water:type===B.DEEPSLATE?materials.deepslate:type===B.COAL?materials.coal:type===B.IRON?materials.iron:type===B.COPPER?materials.copper:type===B.GOLD?materials.gold:type===B.REDSTONE?materials.redstone:type===B.DIAMOND?materials.diamond:type===B.EMERALD?materials.emerald:type===B.DEEPSLATE_COAL?materials.deepslateCoal:type===B.DEEPSLATE_IRON?materials.deepslateIron:type===B.DEEPSLATE_COPPER?materials.deepslateCopper:type===B.DEEPSLATE_GOLD?materials.deepslateGold:type===B.DEEPSLATE_REDSTONE?materials.deepslateRedstone:type===B.DEEPSLATE_DIAMOND?materials.deepslateDiamond:materials.deepslateEmerald;
+    type===B.SAND?materials.sand:type===B.WOOD?materials.wood:type===B.LEAVES?materials.leaves:type===B.WATER?materials.water:type===B.BEDROCK?materials.bedrock:type===B.DEEPSLATE?materials.deepslate:type===B.COAL?materials.coal:type===B.IRON?materials.iron:type===B.COPPER?materials.copper:type===B.GOLD?materials.gold:type===B.REDSTONE?materials.redstone:type===B.DIAMOND?materials.diamond:type===B.EMERALD?materials.emerald:type===B.DEEPSLATE_COAL?materials.deepslateCoal:type===B.DEEPSLATE_IRON?materials.deepslateIron:type===B.DEEPSLATE_COPPER?materials.deepslateCopper:type===B.DEEPSLATE_GOLD?materials.deepslateGold:type===B.DEEPSLATE_REDSTONE?materials.deepslateRedstone:type===B.DEEPSLATE_DIAMOND?materials.deepslateDiamond:materials.deepslateEmerald;
 }
 function createChunk(cx,cz){
   const k=key(cx,cz);if(chunks.has(k))return;
@@ -148,9 +155,10 @@ function createChunk(cx,cz){
     const wx=sx+x,wz=sz+z,h=getHeight(wx,wz);
     const bottom=mobile?Math.max(0,h-5):0;
     for(let y=bottom;y<=h;y++){const type=getBlock(wx,y,wz);if(type!==B.AIR&&!broken.has(`${wx},${y},${wz}`))blocks.push({x:wx,y,z:wz,type})}
-    if(!mobile&&isTree(wx,wz))for(const tb of treeBlocks(wx,wz))if(!broken.has(`${tb.x},${tb.y},${tb.z}`))blocks.push(tb);
+    if(!mobile&&isTree(wx,wz))for(const tb of treeBlocks(wx,wz))if(!broken.has([tb.x,tb.y,tb.z].join(','))&&!placed.has([tb.x,tb.y,tb.z].join(',')))blocks.push(tb);
     if(h<WATER_LEVEL)blocks.push({x:wx,y:WATER_LEVEL,z:wz,type:B.WATER});
   }
+  for(const [pk,pb] of placed){const q=pk.split(',').map(Number);if(Math.floor(q[0]/CHUNK_SIZE)===cx&&Math.floor(q[2]/CHUNK_SIZE)===cz&&q[1]>getHeight(q[0],q[2])&&q[1]<WORLD_HEIGHT)blocks.push({x:q[0],y:q[1],z:q[2],type:pb.type,rot:pb.rot||0})}
   const groups=new Map();
   for(const block of blocks){
     const n=[[block.x+1,block.y,block.z],[block.x-1,block.y,block.z],[block.x,block.y+1,block.z],[block.x,block.y-1,block.z],[block.x,block.y,block.z+1],[block.x,block.y,block.z-1]];
@@ -166,7 +174,7 @@ function createChunk(cx,cz){
     mesh.frustumCulled=false;
     mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
     for(let i=0;i<list.length;i++){
-      const b=list[i];temp.position.set(b.x+.5,b.y+.5,b.z+.5);temp.rotation.set(0,0,0);temp.scale.set(1,1,1);temp.updateMatrix();mesh.setMatrixAt(i,temp.matrix);
+      const b=list[i];temp.position.set(b.x+.5,b.y+.5,b.z+.5);temp.rotation.set(0,b.rot||0,0);temp.scale.set(1,1,1);temp.updateMatrix();mesh.setMatrixAt(i,temp.matrix);
     }
     mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=false;mesh.receiveShadow=true;if(list.some(b=>b.type===B.WATER)){mesh.renderOrder=2;const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];for(const m of mats){m.transparent=true;m.depthWrite=false;m.opacity=.62}}scene.add(mesh);meshes.push(mesh);
   }
@@ -216,11 +224,11 @@ for(const t of destroyTextures){t.magFilter=THREE.NearestFilter;t.minFilter=THRE
 const breakMesh=new THREE.Mesh(geometry,Array.from({length:6},()=>new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,opacity:.95})));
 breakMesh.scale.setScalar(1.003);breakMesh.visible=false;scene.add(breakMesh);
 function rayBlock(){
-  const origin=camera.position.clone(),dir=new THREE.Vector3();camera.getWorldDirection(dir);
-  for(let d=0;d<=6;d+=.04){const p=origin.clone().addScaledVector(dir,d),x=Math.floor(p.x),y=Math.floor(p.y),z=Math.floor(p.z),type=broken.has(`${x},${y},${z}`)?B.AIR:getBlock(x,y,z);if(type!==B.AIR&&type!==B.WATER)return{x,y,z,type}}
+  const origin=camera.position.clone(),dir=new THREE.Vector3();camera.getWorldDirection(dir);let last=null;
+  for(let d=0;d<=6;d+=.04){const p=origin.clone().addScaledVector(dir,d),x=Math.floor(p.x),y=Math.floor(p.y),z=Math.floor(p.z),type=getBlock(x,y,z);if(type!==B.AIR&&type!==B.WATER){const normal=new THREE.Vector3(last?last.x-x:0,last?last.y-y:1,last?last.z-z:0);return{x,y,z,type,normal}}last={x,y,z}}
   return null;
 }
-function hardness(type){return type===B.LEAVES?.18:type===B.GRASS||type===B.DIRT||type===B.SAND?.55:type===B.WOOD?1.05:type===B.STONE?1.5:.8}
+function hardness(type){if(type===B.BEDROCK)return Infinity;return type===B.LEAVES?.18:type===B.GRASS||type===B.DIRT||type===B.SAND?.55:type===B.WOOD?1.05:type===B.STONE?1.5:.8}
 function setBreakStage(stage,target){
   if(stage<0||!target){breakMesh.visible=false;return}
   breakMesh.position.set(target.x+.5,target.y+.5,target.z+.5);
@@ -230,17 +238,37 @@ function setBreakStage(stage,target){
 }
 function startBreaking(){
   if(!gameStarted||mobile)return;
-  const t=rayBlock();if(!t)return;
+  const t=rayBlock();if(!t||t.type===B.BEDROCK)return;
   breaking=true;breakTarget=t;breakStart=performance.now();breakDuration=hardness(t.type)*1000;breakStage=0;setBreakStage(0,t);
 }
 function stopBreaking(){breaking=false;breakTarget=null;breakStage=-1;breakMesh.visible=false}
-function finishBreaking(t){
-  const k=`${t.x},${t.y},${t.z}`;broken.add(k);
-  const cx=Math.floor(t.x/CHUNK_SIZE),cz=Math.floor(t.z/CHUNK_SIZE);
-  unloadChunk(cx,cz);createChunk(cx,cz);
-  stopBreaking();
+function spawnDrop(type,x,y,z){
+  const m=new THREE.Mesh(geometry,material(type));m.scale.setScalar(.28);m.position.set(x+.5,y+.5,z+.5);m.rotation.set(Math.random(),Math.random(),Math.random());scene.add(m);
+  drops.push({mesh:m,velocity:new THREE.Vector3((Math.random()-.5)*2,3+Math.random()*2,(Math.random()-.5)*2),age:0});
 }
-document.addEventListener('mousedown',e=>{if(e.button===0)startBreaking()});
+function finishBreaking(t){
+  const k=[t.x,t.y,t.z].join(',');
+  if(placed.has(k))placed.delete(k);else broken.add(k);
+  spawnDrop(t.type,t.x,t.y,t.z);
+  const cx=Math.floor(t.x/CHUNK_SIZE),cz=Math.floor(t.z/CHUNK_SIZE);
+  unloadChunk(cx,cz);createChunk(cx,cz);stopBreaking();
+}
+function placeBlock(){
+  if(!gameStarted||inventoryOpen||mobile)return;
+  const hit=rayBlock();if(!hit)return;
+  const nx=hit.x+Math.round(hit.normal.x),ny=hit.y+Math.round(hit.normal.y),nz=hit.z+Math.round(hit.normal.z);
+  if(ny<1||ny>=WORLD_HEIGHT)return;
+  const k=[nx,ny,nz].join(',');
+  if(getBlock(nx,ny,nz)!==B.AIR)return;
+  const type=hotbarTypes[selectedSlot];if(type===B.BEDROCK)return;
+  const minX=Math.floor(player.position.x-player.width/2),maxX=Math.floor(player.position.x+player.width/2),minY=Math.floor(player.position.y),maxY=Math.floor(player.position.y+player.height),minZ=Math.floor(player.position.z-player.width/2),maxZ=Math.floor(player.position.z+player.width/2);
+  if(nx>=minX&&nx<=maxX&&ny>=minY&&ny<=maxY&&nz>=minZ&&nz<=maxZ)return;
+  placed.set(k,{type,rot:placeRotation});broken.delete(k);
+  const cx=Math.floor(nx/CHUNK_SIZE),cz=Math.floor(nz/CHUNK_SIZE);unloadChunk(cx,cz);createChunk(cx,cz);
+}
+
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('mousedown',e=>{if(e.button===0)startBreaking();if(e.button===2)placeBlock()});
 document.addEventListener('mouseup',e=>{if(e.button===0)stopBreaking()});
 
 function updateKeysHud(){for(const code of ['KeyW','KeyA','KeyS','KeyD','Space']){const el=document.querySelector(`[data-key="${code}"]`);if(el)el.classList.toggle('pressed',!!keys[code])}}
@@ -283,7 +311,7 @@ function initial(){
 renderer.domElement.addEventListener('click',()=>{if(!mobile&&!locked)renderer.domElement.requestPointerLock()});
 document.addEventListener('pointerlockchange',()=>locked=document.pointerLockElement===renderer.domElement);
 document.addEventListener('mousemove',e=>{if(!locked||!gameStarted)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-Math.PI/2+.01,Math.min(Math.PI/2-.01,pitch))});
-document.addEventListener('keydown',e=>{keys[e.code]=true;if(/^Digit[1-9]$/.test(e.code)){selectedSlot=Number(e.code.slice(5))-1;updateHotbar()}if(e.code==='KeyE'&&gameStarted){inventoryOpen=!inventoryOpen;document.getElementById('inventory').classList.toggle('open',inventoryOpen);if(inventoryOpen&&locked)document.exitPointerLock()}if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault()});
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyR'&&gameStarted&&!inventoryOpen)placeRotation=(placeRotation+Math.PI/2)%(Math.PI*2);if(/^Digit[1-9]$/.test(e.code)){selectedSlot=Number(e.code.slice(5))-1;updateHotbar()}if(e.code==='KeyE'&&gameStarted){inventoryOpen=!inventoryOpen;document.getElementById('inventory').classList.toggle('open',inventoryOpen);if(inventoryOpen&&locked)document.exitPointerLock()}if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault()});
 document.addEventListener('keyup',e=>keys[e.code]=false);
 document.addEventListener('wheel',e=>{if(!gameStarted||inventoryOpen)return;selectedSlot=(selectedSlot+(e.deltaY>0?1:8))%9;updateHotbar()},{passive:true});
 document.addEventListener('mousedown',e=>{if(e.button===0){const now=performance.now();clickTimes.push(now);clickTimes=clickTimes.filter(t=>now-t<1000);cps=clickTimes.length}});
@@ -292,7 +320,7 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),.05);
-  if(gameStarted&&!inventoryOpen)move(dt);if(breaking){const t=rayBlock();if(!t||t.x!==breakTarget.x||t.y!==breakTarget.y||t.z!==breakTarget.z)stopBreaking();else{const p=(performance.now()-breakStart)/breakDuration,stage=Math.min(9,Math.floor(p*10));if(stage!==breakStage){breakStage=stage;setBreakStage(stage,breakTarget)}if(p>=1)finishBreaking(t)}}
+  if(gameStarted&&!inventoryOpen)move(dt);for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.age+=dt;d.velocity.y-=14*dt;d.mesh.position.addScaledVector(d.velocity,dt);d.mesh.rotation.x+=dt*2;d.mesh.rotation.y+=dt*3;const gy=getHeight(Math.floor(d.mesh.position.x),Math.floor(d.mesh.position.z))+.25;if(d.mesh.position.y<gy){d.mesh.position.y=gy;d.velocity.y*=-.35;d.velocity.x*=.8;d.velocity.z*=.8}const dx=player.position.x-d.mesh.position.x,dy=player.position.y+.7-d.mesh.position.y,dz=player.position.z-d.mesh.position.z,dist=Math.hypot(dx,dy,dz);if(dist<2.2){const f=Math.min(8,3+5/(dist+.25));d.velocity.x+=dx*f*dt;d.velocity.y+=dy*f*dt;d.velocity.z+=dz*f*dt}if(d.age>20||dist<.45){scene.remove(d.mesh);drops.splice(i,1)}}if(breaking){const t=rayBlock();if(!t||t.x!==breakTarget.x||t.y!==breakTarget.y||t.z!==breakTarget.z)stopBreaking();else{const p=(performance.now()-breakStart)/breakDuration,stage=Math.min(9,Math.floor(p*10));if(stage!==breakStage){breakStage=stage;setBreakStage(stage,breakTarget)}if(p>=1)finishBreaking(t)}}
   cameraUpdate();hud();chunkTimer+=dt;
   if(chunkTimer>.35){updateChunks();chunkTimer=0}
   renderer.render(scene,camera);
