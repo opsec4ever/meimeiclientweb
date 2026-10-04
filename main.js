@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
-const CHUNK_SIZE=16,WORLD_MIN=-64,WORLD_MAX=320,RENDER_DISTANCE=mobile?0:2,WATER_LEVEL=63,seed=928374;
+const CHUNK_SIZE=16,WORLD_MIN=-64,WORLD_MAX=320,RENDER_DISTANCE=mobile?0:2,WATER_LEVEL=63,seed=(crypto.getRandomValues(new Uint32Array(1))[0]||Date.now())|0;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x78a9d5);
 scene.fog=new THREE.Fog(0x78a9d5,70,190);
@@ -79,6 +79,49 @@ const inventoryCounts=new Array(9).fill(0);
 const HOTBAR_ICONS=['grass_block_top','dirt','stone','sand','oak_log','oak_leaves','deepslate','stone','bedrock'].map(n=>ASSET_BASE+n+'.png');
 
 const clock=new THREE.Clock();
+const debugState={scoreTitle:'MeiMei',balance:'100k',hideBottom:false,coverImage:'',snap:10,items:[]};
+let debugOpen=false;
+const debugPanel=document.createElement('div');debugPanel.id='debug-panel';debugPanel.innerHTML=`
+<div class="dbg-box"><div class="dbg-title">HUD DEBUG</div>
+<label>scoreboard title<input id="dbg-title" value="MeiMei"></label>
+<label>balance<input id="dbg-balance" value="100k"></label>
+<label>bottom HUD image<input id="dbg-image" placeholder="image URL"></label>
+<label>snap <input id="dbg-snap" type="number" min="1" max="50" value="10"></label>
+<div class="dbg-row"><button id="dbg-hide">hide bottom hud</button><button id="dbg-add">add text hud</button></div>
+<div id="dbg-texts"></div><div class="dbg-help">' to close/open · drag HUDs · right-click text to remove</div></div>`;
+document.body.appendChild(debugPanel);
+function saveDebug(){try{localStorage.setItem('meimei-debug',JSON.stringify(debugState))}catch{}}
+try{Object.assign(debugState,JSON.parse(localStorage.getItem('meimei-debug')||'{}'))}catch{}
+function snap(v){const n=debugState.snap||10;return Math.round(v/n)*n}
+function applyDebug(){
+ const sb=document.getElementById('scoreboard');if(sb){sb.querySelector('.score-title').textContent=debugState.scoreTitle||'MeiMei';sb.querySelector('.score-balance').innerHTML='<span>$</span>'+String(debugState.balance||'100k').replace(/^\$/,'')}
+ const hud=document.getElementById('survival-hud');if(hud)hud.style.display=debugState.hideBottom?'none':'';
+ let cover=document.getElementById('hud-cover');if(debugState.hideBottom&&debugState.coverImage){if(!cover){cover=document.createElement('img');cover.id='hud-cover';document.body.appendChild(cover)}cover.src=debugState.coverImage;cover.style.display='block'}else if(cover)cover.style.display='none';
+}
+function makeDraggable(el){
+ let sx=0,sy=0,ox=0,oy=0,drag=false;
+ el.addEventListener('pointerdown',e=>{if(e.target.closest('input,button'))return;drag=true;el.setPointerCapture(e.pointerId);sx=e.clientX;sy=e.clientY;ox=el.offsetLeft;oy=el.offsetTop});
+ el.addEventListener('pointermove',e=>{if(!drag)return;el.style.left=snap(ox+e.clientX-sx)+'px';el.style.top=snap(oy+e.clientY-sy)+'px';el.style.right='auto';el.style.bottom='auto'});
+ el.addEventListener('pointerup',()=>{if(drag){drag=false;savePositions()}});
+}
+function savePositions(){['fps','cps','scoreboard'].forEach(id=>{const e=document.getElementById(id);if(e)localStorage.setItem('meimei-pos-'+id,JSON.stringify({left:e.offsetLeft,top:e.offsetTop}))});}
+function restorePositions(){['fps','cps','scoreboard'].forEach(id=>{const e=document.getElementById(id);try{const p=JSON.parse(localStorage.getItem('meimei-pos-'+id)||'null');if(p){e.style.left=p.left+'px';e.style.top=p.top+'px';e.style.right='auto';e.style.bottom='auto'}}catch{}})}
+function addTextHud(text='text',color='#ffffff'){
+ const id='custom-'+Date.now();const e=document.createElement('div');e.className='custom-hud';e.id=id;e.textContent=text;e.style.color=color;e.style.left='10px';e.style.top=(120+debugState.items.length*30)+'px';e.dataset.text=text;e.dataset.color=color;
+ e.title='drag me · right-click to remove';document.body.appendChild(e);makeDraggable(e);
+ e.addEventListener('contextmenu',ev=>{ev.preventDefault();e.remove()});
+ debugState.items.push({id,text,color});saveDebug();renderTextControls();
+}
+function renderTextControls(){const box=document.getElementById('dbg-texts');if(!box)return;box.innerHTML='';debugState.items.forEach((it,i)=>{const row=document.createElement('div');row.className='dbg-text-row';row.innerHTML='<input value="'+it.text.replace(/"/g,'&quot;')+'"><input type="color" value="'+it.color+'"><button>×</button>';row.children[0].oninput=e=>{it.text=e.target.value;const el=document.getElementById(it.id);if(el)el.textContent=it.text;saveDebug()};row.children[1].oninput=e=>{it.color=e.target.value;const el=document.getElementById(it.id);if(el)el.style.color=it.color;saveDebug()};row.children[2].onclick=()=>{document.getElementById(it.id)?.remove();debugState.items.splice(i,1);saveDebug();renderTextControls()};box.appendChild(row)})}
+document.getElementById('dbg-title').oninput=e=>{debugState.scoreTitle=e.target.value;applyDebug();saveDebug()};
+document.getElementById('dbg-balance').oninput=e=>{debugState.balance=e.target.value;applyDebug();saveDebug()};
+document.getElementById('dbg-image').oninput=e=>{debugState.coverImage=e.target.value;applyDebug();saveDebug()};
+document.getElementById('dbg-snap').oninput=e=>{debugState.snap=Math.max(1,+e.target.value||10);saveDebug()};
+document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
+document.getElementById('dbg-add').onclick=()=>addTextHud();
+document.addEventListener('keydown',e=>{if(e.key==="'"){debugOpen=!debugOpen;debugPanel.classList.toggle('open',debugOpen);if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}}});
+window.addEventListener('load',()=>{setTimeout(()=>{applyDebug();restorePositions();debugState.items.forEach(it=>{const e=document.createElement('div');e.className='custom-hud';e.id=it.id;e.textContent=it.text;e.style.color=it.color;e.style.left='10px';e.style.top='120px';document.body.appendChild(e);makeDraggable(e)});},0)});
+
 
 function hash2D(x,z){
   let h=Math.imul(x,374761393);
