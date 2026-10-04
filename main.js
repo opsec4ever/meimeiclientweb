@@ -60,18 +60,21 @@ const materials={
   wood:[mat(textures.oak),mat(textures.oak),mat(textures.oakTop),mat(textures.oakTop),mat(textures.oak),mat(textures.oak)],
   leaves:mat(textures.leaves,{transparent:true,alphaTest:.1,color:0x77ab3a}),
   water:mat(textures.water,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),
-  deepslate:mat(oreTextures.deepslate),coal:mat(oreTextures.coal),iron:mat(oreTextures.iron),copper:mat(oreTextures.copper),
+  bedrock:mat(oreTextures.bedrock),deepslate:mat(oreTextures.deepslate),coal:mat(oreTextures.coal),iron:mat(oreTextures.iron),copper:mat(oreTextures.copper),
   gold:mat(oreTextures.gold),redstone:mat(oreTextures.redstone),diamond:mat(oreTextures.diamond),emerald:mat(oreTextures.emerald),
   deepslateCoal:mat(oreTextures.deepslateCoal),deepslateIron:mat(oreTextures.deepslateIron),deepslateCopper:mat(oreTextures.deepslateCopper),deepslateGold:mat(oreTextures.deepslateGold),deepslateRedstone:mat(oreTextures.deepslateRedstone),deepslateDiamond:mat(oreTextures.deepslateDiamond),deepslateEmerald:mat(oreTextures.deepslateEmerald)
 };
 
 const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7,DEEPSLATE:8,COAL:9,IRON:10,COPPER:11,GOLD:12,REDSTONE:13,DIAMOND:14,EMERALD:15,DEEPSLATE_COAL:16,DEEPSLATE_IRON:17,DEEPSLATE_COPPER:18,DEEPSLATE_GOLD:19,DEEPSLATE_REDSTONE:20,DEEPSLATE_DIAMOND:21,DEEPSLATE_EMERALD:22,BEDROCK:23};
 const hotbarTypes=[B.GRASS,B.DIRT,B.STONE,B.SAND,B.WOOD,B.LEAVES,B.DEEPSLATE,B.STONE,B.BEDROCK];
+function addToInventory(type){const i=hotbarTypes.indexOf(type);if(i>=0){inventoryCounts[i]++;updateInventoryUI();return true}return false}
+function updateInventoryUI(){document.querySelectorAll('.hotbar-slot').forEach((el,i)=>{let n=el.querySelector('.item-count');if(!n){n=document.createElement('span');n.className='item-count';el.appendChild(n)}n.textContent=inventoryCounts[i]||''})}
 let placeRotation=0;
 const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D(),broken=new Set(),placed=new Map(),drops=[];
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
 let yaw=0,pitch=0,locked=false,gameStarted=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0,selectedSlot=0,cps=0,clickTimes=[],inventoryOpen=false;
+const inventoryCounts=new Array(9).fill(0);
 
 const clock=new THREE.Clock();
 
@@ -244,7 +247,7 @@ function startBreaking(){
 function stopBreaking(){breaking=false;breakTarget=null;breakStage=-1;breakMesh.visible=false}
 function spawnDrop(type,x,y,z){
   const m=new THREE.Mesh(geometry,material(type));m.scale.setScalar(.28);m.position.set(x+.5,y+.5,z+.5);m.rotation.set(Math.random(),Math.random(),Math.random());scene.add(m);
-  drops.push({mesh:m,velocity:new THREE.Vector3((Math.random()-.5)*2,3+Math.random()*2,(Math.random()-.5)*2),age:0});
+  drops.push({mesh:m,type,velocity:new THREE.Vector3((Math.random()-.5)*2,3+Math.random()*2,(Math.random()-.5)*2),age:0});
 }
 function finishBreaking(t){
   const k=[t.x,t.y,t.z].join(',');
@@ -260,10 +263,10 @@ function placeBlock(){
   if(ny<1||ny>=WORLD_HEIGHT)return;
   const k=[nx,ny,nz].join(',');
   if(getBlock(nx,ny,nz)!==B.AIR)return;
-  const type=hotbarTypes[selectedSlot];if(type===B.BEDROCK)return;
+  const type=hotbarTypes[selectedSlot];if(type===B.BEDROCK||inventoryCounts[selectedSlot]<=0)return;
   const minX=Math.floor(player.position.x-player.width/2),maxX=Math.floor(player.position.x+player.width/2),minY=Math.floor(player.position.y),maxY=Math.floor(player.position.y+player.height),minZ=Math.floor(player.position.z-player.width/2),maxZ=Math.floor(player.position.z+player.width/2);
   if(nx>=minX&&nx<=maxX&&ny>=minY&&ny<=maxY&&nz>=minZ&&nz<=maxZ)return;
-  placed.set(k,{type,rot:placeRotation});broken.delete(k);
+  placed.set(k,{type,rot:placeRotation});broken.delete(k);inventoryCounts[selectedSlot]--;updateInventoryUI();
   const cx=Math.floor(nx/CHUNK_SIZE),cz=Math.floor(nz/CHUNK_SIZE);unloadChunk(cx,cz);createChunk(cx,cz);
 }
 
@@ -287,7 +290,7 @@ function hud(){
   cps=clickTimes.length;
   const cp=document.getElementById('cps');
   if(cp)cp.textContent='CPS '+cps;
-  updateHotbar();
+  updateHotbar();updateInventoryUI();
 }
 function initial(){
   const startX=0,startZ=0;
@@ -320,7 +323,7 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),.05);
-  if(gameStarted&&!inventoryOpen)move(dt);for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.age+=dt;d.velocity.y-=14*dt;d.mesh.position.addScaledVector(d.velocity,dt);d.mesh.rotation.x+=dt*2;d.mesh.rotation.y+=dt*3;const gy=getHeight(Math.floor(d.mesh.position.x),Math.floor(d.mesh.position.z))+.25;if(d.mesh.position.y<gy){d.mesh.position.y=gy;d.velocity.y*=-.35;d.velocity.x*=.8;d.velocity.z*=.8}const dx=player.position.x-d.mesh.position.x,dy=player.position.y+.7-d.mesh.position.y,dz=player.position.z-d.mesh.position.z,dist=Math.hypot(dx,dy,dz);if(dist<2.2){const f=Math.min(8,3+5/(dist+.25));d.velocity.x+=dx*f*dt;d.velocity.y+=dy*f*dt;d.velocity.z+=dz*f*dt}if(d.age>20||dist<.45){scene.remove(d.mesh);drops.splice(i,1)}}if(breaking){const t=rayBlock();if(!t||t.x!==breakTarget.x||t.y!==breakTarget.y||t.z!==breakTarget.z)stopBreaking();else{const p=(performance.now()-breakStart)/breakDuration,stage=Math.min(9,Math.floor(p*10));if(stage!==breakStage){breakStage=stage;setBreakStage(stage,breakTarget)}if(p>=1)finishBreaking(t)}}
+  if(gameStarted&&!inventoryOpen)move(dt);for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.age+=dt;d.velocity.y-=14*dt;d.mesh.position.addScaledVector(d.velocity,dt);d.mesh.rotation.x+=dt*2;d.mesh.rotation.y+=dt*3;const gy=getHeight(Math.floor(d.mesh.position.x),Math.floor(d.mesh.position.z))+.25;if(d.mesh.position.y<gy){d.mesh.position.y=gy;d.velocity.y*=-.35;d.velocity.x*=.8;d.velocity.z*=.8}const dx=player.position.x-d.mesh.position.x,dy=player.position.y+.7-d.mesh.position.y,dz=player.position.z-d.mesh.position.z,dist=Math.hypot(dx,dy,dz);if(dist<2.2){const f=Math.min(8,3+5/(dist+.25));d.velocity.x+=dx*f*dt;d.velocity.y+=dy*f*dt;d.velocity.z+=dz*f*dt}if(d.age>20){scene.remove(d.mesh);drops.splice(i,1)}else if(dist<.55){if(addToInventory(d.type)){scene.remove(d.mesh);drops.splice(i,1)}}}if(breaking){const t=rayBlock();if(!t||t.x!==breakTarget.x||t.y!==breakTarget.y||t.z!==breakTarget.z)stopBreaking();else{const p=(performance.now()-breakStart)/breakDuration,stage=Math.min(9,Math.floor(p*10));if(stage!==breakStage){breakStage=stage;setBreakStage(stage,breakTarget)}if(p>=1)finishBreaking(t)}}
   cameraUpdate();hud();chunkTimer+=dt;
   if(chunkTimer>.35){updateChunks();chunkTimer=0}
   renderer.render(scene,camera);
