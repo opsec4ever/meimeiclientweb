@@ -20,20 +20,18 @@ sun.position.set(80,150,60);
 scene.add(sun);
 
 const materials={
-  grass:new THREE.MeshLambertMaterial({color:0x62a83b}),
-  dirt:new THREE.MeshLambertMaterial({color:0x80552e}),
-  stone:new THREE.MeshLambertMaterial({color:0x777777}),
-  sand:new THREE.MeshLambertMaterial({color:0xd6c47a}),
-  wood:new THREE.MeshLambertMaterial({color:0x74502f}),
-  leaves:new THREE.MeshLambertMaterial({color:0x3d873b,transparent:true,opacity:.92}),
-  water:new THREE.MeshLambertMaterial({color:0x328bd1,transparent:true,opacity:.62})
+  grass:[mat(textures.grassSide),mat(textures.grassSide),mat(textures.grassTop),mat(textures.dirt),mat(textures.grassSide),mat(textures.grassSide)],
+  dirt:mat(textures.dirt),stone:mat(textures.stone),sand:mat(textures.sand),
+  wood:[mat(textures.oak),mat(textures.oak),mat(textures.oakTop),mat(textures.oakTop),mat(textures.oak),mat(textures.oak)],
+  leaves:mat(textures.leaves,{transparent:true,alphaTest:.1}),
+  water:mat(textures.water,{transparent:true,opacity:.72,depthWrite:false})
 };
 
-const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7};
+const TEX={"grassTop":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAA8UlEQVR42gUAWW+CMPj7yXuZ0ylHOWwpR6EFC0ERh8gh+ELGEl9mwh8zEC9iv2eaVxwodpoPHxKvlJmeGVp3E4uHXah8xXJIGMbndsRf+gwrm8ooU7hm+pK5jQI/5mgODzI8P/XmrhIfsnR9Q4ckxwkx1ySIQT3WITepZuHfIWokA4ZPbri7WnLEiJVaB00+9wMaj1NvcFsUKkjjz/fSXscR74KJIcgLWRtzIF6bxmREMrDGfSUt7kjubSdNofCUiGaR/U0jqpzrjQTUrriSoeUi2rwk7QOqy2s73WOhJgnuTu4G7ANxrmksgv9dZ4WkeAPz+JNw8txdwAAAAABJRU5ErkJggg==","grassSide":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAeFBMVEV5VTqWbEq5hVyHh4dwsEZoqD5iojhsrEJhoTdpqT9npz1goDZXly1QkCZzs0l2tkyKuVp+vlRqqkCDslOBsFFmpjyQv2CSwWKTwmN/v1WXxmdvr0VkpDqcy2xrq0GNvF11tUttrUN0tEpfnzVxsUd0WERsbGxZPSmGrpghAAAAjElEQVR42gXBB0LCAAAEwd2LGkAFG3ZqIPf/HzLDebPebv+m8XXztlounk8cx5eP994/TN+f68W42nPo7n/Zu55/vn779Fg6t5e2U0+lBTEV2s5YoIptoUAIMEBCgggkClZBEUSKAgUstAAkCJIQm1QHEDQ4K5VCRQMAJCBcUZoSRRpKEwRFogwoKL0BxA0LD3lN79UAAAAASUVORK5CYII=","dirt":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEV5VTq5hVyHh4eWbEpsbGx0WERZPSk6VlZqAAAAa0lEQVR42gXBwQnDQAxFwSd+0FnLgs8+5SyjsA2kgZQgY9j+S8gMM61oM9R6W85NeBDs4BPLSpbk9bBeary02zGC02JIMIpVFCm5kkbtDUPIYt5HnaQuffNxPCuAgfiVH1bk7T5EkTPPovwPGbIOYwnMHcMAAAAASUVORK5CYII=","stone":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAAXklEQVR42gXBMQEAMAwEocqNgNuR8JYLb9uUruCRgLv0dFddBR6bsaF6Ucm2xTNAXddebGur4NVdV1R424xtoMewjW3zTuouUT2wgc2eyhR3XW9TVFR7CsC2PaBsxAdyLn2NNWHIVAAAAABJRU5ErkJggg==","sand":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEXaz6Pt68vn5Lvj27DVxJbRuoo9qeK3AAAAZUlEQVR42gXBMQrCQABE0U9m0gtiH28wkNiP2bUXzP3P4ntscjI0qD2u7bGQ6wS76PCxD0NvQ6LC7OlBOf3u/NqY2nMxjT6jKVuZqzlYZZFLTNJ9tnQMPzNF8pJEke5JfpDsMskfw+0REW3/INgAAAAASUVORK5CYII=","oak":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEV0WjaYeEmRcUJfSitMPSY4Kxi/mP6UAAAAaElEQVR42gXBwQ3DIBREwSd2/90SKWAl8B0lDRAqcPpvJjM4lWpHuFevtkV9qttb3LJUezBV6nLInu7TYe2xEof15M1Q8I+3xgh8WZp5oKnkPLiprro2L8bdi8W142Egh9s+kLOnOfoDKZ4L2kN8RTwAAAAASUVORK5CYII=","oakTop":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAG1BMVEVfSivCnWK4lF+vj1WfhE2WdEF+Yjd0WjZMPSZxHR9aAAAAbklEQVR42gXBgXHDQAwDMFD21dp/3CZ+BmA9lmdZZP+R5oziL+ZWTRHf3vgIUq70liYg2phtmUlmiI1rjuvFHPOeoVWJamMAIoRZoEeFjWvejLTa6XtTDiA1W6pte7AxkwbgPTFE44xyWCzPsg8/vNE4rPRQOg0AAAAASUVORK5CYII=","leaves":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAD1BMVEUAAAC5vLmYmZh3dXdoZGjJX6haAAAAAXRSTlMAQObYZgAAAGlJREFUeNoFgAERwyAMAD8pAtJ0AgIYaAEBbI1/TTtSNOaPiyCHDqkwtVvIia7tHzB6p1IatFtW8gazuB93e1j7tBwy8PJtR4+OkW+0cDR2exThSqQeASMalo9QZe2iV8XcmbgRp5W8Rf/WMg1MmmHulQAAAABJRU5ErkJggg==","water":"iVBORw0KGgoAAAANSUhEUgAAABAAAAIABAMAAAB5lPHgAAAAJ1BMVEWlpaX////5+fnY2NjW1tbV1dXT09PS0tLPz8/Ozs7CwsK4uLiurq5q5mAmAAAADXRSTlO0tLS0tLS0tLS0tLS0frXQ3wAABURJREFUeNqN2D9uG0cUBvDvAK8hkEjRxifIAXKEHME9U1DJeBs2EkCoUREHcGfAdgxVZrMEnl5tA4aKcSMDk+9Q0fzbHXJJO9MMZojB/PD43uzOwgghd38BIInYAaAa4BGMSgL0EAgBT6N5wBjbZYc/ehpJxcKtXQj2iNwESGsCiTo1dR5CqvdpHBavPAJ//4VG4iF5hrczD2ceAyDG2LF6/owenzw8ASJl7QvJw5vEkdx2WD3xInjN34Rj60SNZ0Hgw8zB71sUTjAZHiDH8CAGzVyigJQ+PeZg8oPFTh62xT57NiyePFo9I8uC0B6SyeHZPHh543kIQ5h6OHsw8yl3jcauLnsNm9DD1+x4BZO7hkDyXm9GjDG8mDykQrR4mj289vvHsogfioEP0dPfFw+IR+slDEUlDyx5pPYPTPhicR9AUH9HW00ePtJ7wkD2+euL/NYweXdgTMCDRGYoHpzwyee6TR3VoPG8aj2f1gJI8kjx9SiKP1qMMvW88Wj2hGGTfw8ZT8+ff4tndTJ73kycwem4Iqwnpj3g8Nda7MbjkMT03bjsFv+Fh67HqCckTdNsp4bwPLyx6OOSlatHzLGSPVI9QiweNh6MnuKMenvAwzDzL4nlcmf4E4ar1dHseZA9aT+AyebR4lNxNnmE0TIehth7yqKd/8tybXgDVM0SPm1lIi8OH7AmcPEweGjl0+3AY43HCzn3aJc967sUHz6q6QLg1QfEtu0JeRE9fvL44qE1nstDT9isqmcHf8oj4DFPWLyKHo6eM0vJt9wQsjob0GdPgEfycO4pBSifi8dlD056lH7P4wGtnouXxTOYribPtvOQ1T8DbhoPk8ePHkbPblPmRYtHr2cefscjxcPR83UwvqZCjU/0XL0e0CVPUOCEZ3B53lcP9Rqafx9OeTj33GTP4rkSGj1OFRI6w+i5vp17/MyjICR7eqa5c6j/lud8vh9T188vxqhxi87Z8WD6jm//Yifj3lKQpJUqlVPqJ7r4rHQeGoLXlbGbJPJE+zAs9xYgOimehg9K7z7LJ/mDz8rudq8uQm+56lEqwenz084XEG1Ppa7LrWI5RDj40eKR6AYTV55o3RYwceGlk9TJ5t8Wj2bF31WPR8rh6beQaFQQiP6qErHvKoh2tXPbLnQfZ4BDae6Xx+fat450cPiqfmA0l1ub4k7Q/LHkX4lkeWzkpiHfH8Rg8jt5cpn614tHq65FEF4H3yCKTGp3q88P97IEvjac/z4lmpDY2HBF//3XrEp3UQoHpMHXcOIXmEMCU9Lz0JIZsk8fve6x4XmbPzlnrCSS4eGnYJI8FgGlB9pTD2twmns86eZQMxuyRI54IaT2h1PvkeRU9XgYlP0XPh+IRyOKOeMiVUt4PJUqyR+BJ5zjcTB6q0kcPs0eOAD50nhKvZPlEby+y/G5V4Zl9LB4KOG8IywpjAVRMznHR92GQ4eBtORRXRljMHkQH7/n+Tp51Fg8vY8cXXckjBKUYT15SBGeJY9QQvJwig+ZPMG56NkxgsWgetl6pHjkwPNIZqOIsnhCen6pXhYPLXlIyp6HnuSBR0aPJs/WRs86e3z2SPHEoUyeMHo4evRZvu+sNsmD6LloPF7ATX/gEUSPHz1UjZ5l9ihc9EzHcvWQe/HB6OHk+dhFz26jLnuEDD9BPMmasXT5/l7vp370GG08n1eN50rXfetB9RDtFP3kKdRw3cWdtp3a6Bnen/zeMvfk4qeO3zdAxUKXrvHkTeceQfbI6JGwuMseGvkfU1SgCRdOlMYAAAAASUVORK5CYII="};\nconst loader=new THREE.TextureLoader();\nfunction tx(b){const t=loader.load('data:image/png;base64,'+b);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t;}\nconst textures={grassTop:tx(TEX.grassTop),grassSide:tx(TEX.grassSide),dirt:tx(TEX.dirt),stone:tx(TEX.stone),sand:tx(TEX.sand),oak:tx(TEX.oak),oakTop:tx(TEX.oakTop),leaves:tx(TEX.leaves),water:tx(TEX.water)};\nfunction mat(map,extra={}){return new THREE.MeshLambertMaterial({map,...extra});}\nconst B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7};
 const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D();
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
-let yaw=0,pitch=0,locked=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0;
+let yaw=0,pitch=0,locked=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0;\nconst mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
 const clock=new THREE.Clock();
 
 function hash2D(x,z){
@@ -148,12 +146,12 @@ function collides(p){
   return false;
 }
 function move(dt){
-  const speed=keys.ShiftLeft?9:5,d=new THREE.Vector3();
+  const speed=keys.ShiftLeft?7:4,d=new THREE.Vector3();
   if(keys.KeyW)d.z-=1;if(keys.KeyS)d.z+=1;if(keys.KeyA)d.x-=1;if(keys.KeyD)d.x+=1;
   if(d.lengthSq()){d.normalize();const sin=Math.sin(yaw),cos=Math.cos(yaw),x=d.x*cos-d.z*sin,z=d.x*sin+d.z*cos;player.velocity.x=x*speed;player.velocity.z=z*speed}
   else{player.velocity.x*=.75;player.velocity.z*=.75}
   player.velocity.y-=25*dt;
-  if(keys.Space&&player.onGround){player.velocity.y=9;player.onGround=false}
+  if(keys.Space&&player.onGround){player.velocity.y=8;player.onGround=false}
   const old=player.position.clone();
   player.position.x+=player.velocity.x*dt;if(collides(player.position)){player.position.x=old.x;player.velocity.x=0}
   player.position.z+=player.velocity.z*dt;if(collides(player.position)){player.position.z=old.z;player.velocity.z=0}
@@ -185,7 +183,7 @@ function initial(){
   }
   requestAnimationFrame(step);
 }
-renderer.domElement.addEventListener('click',()=>{if(!locked)renderer.domElement.requestPointerLock()});
+renderer.domElement.addEventListener('click',()=>{if(!mobile&&!locked)renderer.domElement.requestPointerLock()});
 document.addEventListener('pointerlockchange',()=>locked=document.pointerLockElement===renderer.domElement);
 document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-Math.PI/2+.01,Math.min(Math.PI/2-.01,pitch))});
 document.addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault()});
@@ -195,7 +193,7 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),.05);
-  if(locked)move(dt);
+  if(locked||mobile)move(dt);
   cameraUpdate();hud();chunkTimer+=dt;
   if(chunkTimer>.35){updateChunks();chunkTimer=0}
   renderer.render(scene,camera);
