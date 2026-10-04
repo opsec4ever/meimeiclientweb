@@ -219,6 +219,40 @@ document.addEventListener('mouseup',e=>{if(e.button===0)stopBreaking()});
 function updateKeysHud(){for(const code of ['KeyW','KeyA','KeyS','KeyD','Space']){const el=document.querySelector(`[data-key="${code}"]`);if(el)el.classList.toggle('pressed',!!keys[code])}}
 function updateHotbar(){document.querySelectorAll('.hotbar-slot').forEach((el,i)=>el.classList.toggle('selected',i===selectedSlot));const h=document.querySelector('#survival-hud .hotbar');if(h)h.style.setProperty('--selected-slot',selectedSlot)}
 
+function hud(){
+  const now=performance.now();
+  frameCount++;
+  if(now-fpsTime>=500){
+    const el=document.getElementById('fps');
+    if(el)el.textContent='FPS '+Math.round(frameCount/((now-fpsTime)/1000));
+    frameCount=0;
+    fpsTime=now;
+  }
+  clickTimes=clickTimes.filter(t=>now-t<1000);
+  cps=clickTimes.length;
+  const cp=document.getElementById('cps');
+  if(cp)cp.textContent='CPS '+cps;
+  updateHotbar();
+}
+function initial(){
+  const startX=0,startZ=0;
+  player.position.set(startX+.5,getHeight(startX,startZ)+1.05,startZ+.5);
+  cameraUpdate();
+  updateChunks();
+  const l=document.getElementById('loading');
+  const p=document.getElementById('progress');
+  if(p)p.style.width='100%';
+  setTimeout(()=>{
+    if(!l)return;
+    l.style.opacity='0';
+    setTimeout(()=>{
+      l.style.display='none';
+      const st=document.getElementById('start');
+      if(st)st.style.display='flex';
+    },250);
+  },250);
+}
+
 renderer.domElement.addEventListener('click',()=>{if(!mobile&&!locked)renderer.domElement.requestPointerLock()});
 document.addEventListener('pointerlockchange',()=>locked=document.pointerLockElement===renderer.domElement);
 document.addEventListener('mousemove',e=>{if(!locked||!gameStarted)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-Math.PI/2+.01,Math.min(Math.PI/2-.01,pitch))});
