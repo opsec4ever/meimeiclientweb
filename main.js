@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
-const CHUNK_SIZE=16,WORLD_HEIGHT=64,RENDER_DISTANCE=2,WATER_LEVEL=20,seed=928374;
+const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
+const CHUNK_SIZE=16,WORLD_HEIGHT=mobile?48:64,RENDER_DISTANCE=mobile?1:2,WATER_LEVEL=mobile?15:20,seed=928374;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x78a9d5);
 scene.fog=new THREE.Fog(0x78a9d5,70,190);
@@ -9,7 +10,7 @@ const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,300);
 camera.rotation.order='YXZ';
 
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1));
+renderer.setPixelRatio(mobile?0.65:Math.min(devicePixelRatio,1));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 document.getElementById('game').appendChild(renderer.domElement);
@@ -102,7 +103,7 @@ function createChunk(cx,cz){
   for(let x=0;x<CHUNK_SIZE;x++)for(let z=0;z<CHUNK_SIZE;z++){
     const wx=sx+x,wz=sz+z,h=getHeight(wx,wz);
     for(let y=0;y<=h;y++){const type=getBlock(wx,y,wz);if(type!==B.AIR)blocks.push({x:wx,y,z:wz,type})}
-    if(isTree(wx,wz))blocks.push(...treeBlocks(wx,wz));
+    if(!mobile&&isTree(wx,wz))blocks.push(...treeBlocks(wx,wz));
     if(h<WATER_LEVEL)for(let y=h+1;y<=WATER_LEVEL;y++)blocks.push({x:wx,y,z:wz,type:B.WATER});
   }
   const groups=new Map();
@@ -175,7 +176,7 @@ function initial(){
   for(let x=-RENDER_DISTANCE;x<=RENDER_DISTANCE;x++)for(let z=-RENDER_DISTANCE;z<=RENDER_DISTANCE;z++)jobs.push([x,z]);
   jobs.sort((a,b)=>(Math.abs(a[0])+Math.abs(a[1]))-(Math.abs(b[0])+Math.abs(b[1])));
   function step(){
-    const end=Math.min(done+2,jobs.length);
+    const end=Math.min(done+(mobile?1:2),jobs.length);
     while(done<end){const [x,z]=jobs[done++];createChunk(x,z)}
     document.getElementById('progress').style.width=`${done/total*100}%`;
     if(done<total)requestAnimationFrame(step);
@@ -201,7 +202,8 @@ function animate(){
   if(chunkTimer>.35){updateChunks();chunkTimer=0}
   renderer.render(scene,camera);
 }
-initial();animate();\nif(mobile){
+initial();animate();
+setTimeout(()=>{const l=document.getElementById('loading');if(l&&l.style.display!=='none'){document.querySelector('.loading-text').textContent='WORLD READY - TAP TO CONTINUE';l.style.opacity='0';setTimeout(()=>{l.style.display='none';document.getElementById('start').style.display='flex'},250)}},10000);\nif(mobile){
   document.getElementById('mobile').style.display='block';
   const stick=document.getElementById('stick'),knob=document.getElementById('stick-knob');
   let stickId=null,sx=0,sy=0;
