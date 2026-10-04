@@ -88,13 +88,13 @@ const debugPanel=document.createElement('div');debugPanel.id='debug-panel';debug
 <label>bottom HUD image<input id="dbg-image" placeholder="image URL"></label>
 <label>snap <input id="dbg-snap" type="number" min="1" max="50" value="10"></label>
 <div class="dbg-row"><button id="dbg-hide">hide bottom hud</button><button id="dbg-add">add text hud</button></div>
-<div id="dbg-texts"></div><div class="dbg-help">' to close/open · drag HUDs · right-click text to remove</div></div>`;
+<div id="dbg-texts"></div><div class="dbg-help">F3 + G to close/open · drag HUDs · right-click text to remove</div></div>`;
 document.body.appendChild(debugPanel);
 function saveDebug(){try{localStorage.setItem('meimei-debug',JSON.stringify(debugState))}catch{}}
 try{Object.assign(debugState,JSON.parse(localStorage.getItem('meimei-debug')||'{}'))}catch{}
 function snap(v){const n=debugState.snap||10;return Math.round(v/n)*n}
 function applyDebug(){
- const sb=document.getElementById('scoreboard');if(sb){sb.querySelector('.score-title').textContent=debugState.scoreTitle||'MeiMei';sb.querySelector('.score-balance').innerHTML='<span>$</span>'+String(debugState.balance||'100k').replace(/^\$/,'')}
+ const sb=document.getElementById('scoreboard');if(sb){sb.querySelector('.score-title').textContent=debugState.scoreTitle||'MeiMei';sb.querySelector('.score-value').textContent=String(debugState.balance||'218.25M')}
  const hud=document.getElementById('survival-hud');if(hud)hud.style.display=debugState.hideBottom?'none':'';
  let cover=document.getElementById('hud-cover');if(debugState.hideBottom&&debugState.coverImage){if(!cover){cover=document.createElement('img');cover.id='hud-cover';document.body.appendChild(cover)}cover.src=debugState.coverImage;cover.style.display='block'}else if(cover)cover.style.display='none';
 }
@@ -119,7 +119,9 @@ document.getElementById('dbg-image').oninput=e=>{debugState.coverImage=e.target.
 document.getElementById('dbg-snap').oninput=e=>{debugState.snap=Math.max(1,+e.target.value||10);saveDebug()};
 document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
 document.getElementById('dbg-add').onclick=()=>addTextHud();
-document.addEventListener('keydown',e=>{if(e.key==='F4'){e.preventDefault();debugOpen=!debugOpen;debugPanel.classList.toggle('open',debugOpen);if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}}});
+let f3Held=false;
+document.addEventListener('keydown',e=>{if(e.key==='F3'){f3Held=true;e.preventDefault();return}if(f3Held&&e.key.toLowerCase()==='g'){e.preventDefault();debugOpen=!debugOpen;debugPanel.classList.toggle('open',debugOpen);if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}}});
+document.addEventListener('keyup',e=>{if(e.key==='F3')f3Held=false});
 window.addEventListener('load',()=>{setTimeout(()=>{applyDebug();restorePositions();debugState.items.forEach(it=>{const e=document.createElement('div');e.className='custom-hud';e.id=it.id;e.textContent=it.text;e.style.color=it.color;e.style.left='10px';e.style.top='120px';document.body.appendChild(e);makeDraggable(e)});},0)});
 
 
