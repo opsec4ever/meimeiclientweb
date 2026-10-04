@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const CHUNK_SIZE=16,WORLD_HEIGHT=96,RENDER_DISTANCE=5,WATER_LEVEL=27,seed=928374;
+const CHUNK_SIZE=16,WORLD_HEIGHT=64,RENDER_DISTANCE=2,WATER_LEVEL=20,seed=928374;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x78a9d5);
 scene.fog=new THREE.Fog(0x78a9d5,70,190);
@@ -9,7 +9,7 @@ const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,300);
 camera.rotation.order='YXZ';
 
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+renderer.setPixelRatio(Math.min(devicePixelRatio,1));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 document.getElementById('game').appendChild(renderer.domElement);
@@ -56,17 +56,15 @@ function noise2D(x,z,scale=1){
 }
 function fbm(x,z){
   let value=0,amp=1,freq=1,total=0;
-  for(let i=0;i<5;i++){
-    value+=noise2D(x*freq,z*freq,80/freq)*amp;
+  for(let i=0;i<2;i++){
+    value+=noise2D(x*freq,z*freq,100/freq)*amp;
     total+=amp;amp*=.5;freq*=2;
   }
   return value/total;
 }
 function getHeight(x,z){
-  const continental=fbm(x,z),hills=noise2D(x,z,35),detail=noise2D(x,z,12);
-  let h=20+continental*30+hills*10+detail*3;
-  const mountain=noise2D(x+5000,z-5000,130);
-  if(mountain>.63)h+=(mountain-.63)*90;
+  const continental=fbm(x,z),hills=noise2D(x,z,42);
+  let h=16+continental*18+hills*6;
   return Math.max(4,Math.min(WORLD_HEIGHT-5,Math.floor(h)));
 }
 function getBlock(x,y,z){
@@ -80,7 +78,7 @@ function getBlock(x,y,z){
 function isTree(x,z){
   const h=getHeight(x,z);
   if(h<=WATER_LEVEL+1)return false;
-  if(hash2D(x*13+71,z*17-19)<.986)return false;
+  if(hash2D(x*13+71,z*17-19)<.997)return false;
   return noise2D(x+900,z-900,8)>.4;
 }
 function treeBlocks(x,z){
@@ -170,12 +168,22 @@ function hud(){
   if(now-fpsTime>=500){document.getElementById('fps').textContent=`FPS: ${Math.round(frameCount/((now-fpsTime)/1000))}`;frameCount=0;fpsTime=now}
 }
 function initial(){
-  const total=(RENDER_DISTANCE*2+1)**2;let done=0;
-  for(let x=-RENDER_DISTANCE;x<=RENDER_DISTANCE;x++)for(let z=-RENDER_DISTANCE;z<=RENDER_DISTANCE;z++){
-    createChunk(x,z);done++;document.getElementById('progress').style.width=`${done/total*100}%`;
+  const total=(RENDER_DISTANCE*2+1)**2;
+  let done=0;
+  const jobs=[];
+  for(let x=-RENDER_DISTANCE;x<=RENDER_DISTANCE;x++)for(let z=-RENDER_DISTANCE;z<=RENDER_DISTANCE;z++)jobs.push([x,z]);
+  jobs.sort((a,b)=>(Math.abs(a[0])+Math.abs(a[1]))-(Math.abs(b[0])+Math.abs(b[1])));
+  function step(){
+    const end=Math.min(done+2,jobs.length);
+    while(done<end){const [x,z]=jobs[done++];createChunk(x,z)}
+    document.getElementById('progress').style.width=`${done/total*100}%`;
+    if(done<total)requestAnimationFrame(step);
+    else{
+      player.position.set(.5,getHeight(0,0)+1,.5);cameraUpdate();
+      setTimeout(()=>{const l=document.getElementById('loading');l.style.opacity='0';setTimeout(()=>{l.style.display='none';document.getElementById('start').style.display='flex'},350)},150);
+    }
   }
-  player.position.set(.5,getHeight(0,0)+1,.5);cameraUpdate();
-  setTimeout(()=>{const l=document.getElementById('loading');l.style.opacity='0';setTimeout(()=>{l.style.display='none';document.getElementById('start').style.display='flex'},500)},300);
+  requestAnimationFrame(step);
 }
 renderer.domElement.addEventListener('click',()=>{if(!locked)renderer.domElement.requestPointerLock()});
 document.addEventListener('pointerlockchange',()=>locked=document.pointerLockElement===renderer.domElement);
@@ -193,3 +201,27 @@ function animate(){
   renderer.render(scene,camera);
 }
 initial();animate();
+const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
+if(mobile){
+  document.getElementById('mobile').style.display='block';
+  const stick=document.getElementById('stick'),knob=document.getElementById('stick-knob');
+  let stickId=null,sx=0,sy=0;
+  function stickMove(t){
+    let dx=t.clientX-sx,dy=t.clientY-sy,len=Math.hypot(dx,dy),max=42;
+    if(len>max){dx=dx/len*max;dy=dy/len*max}
+    knob.style.transform=`translate(${dx}px,${dy}px)`;
+    keys.KeyW=dy<-10;keys.KeyS=dy>10;keys.KeyA=dx<-10;keys.KeyD=dx>10;
+  }
+  stick.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];stickId=t.identifier;sx=t.clientX;sy=t.clientY;stickMove(t)},{passive:false});
+  stick.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===stickId)stickMove(t)},{passive:false});
+  stick.addEventListener('touchend',e=>{e.preventDefault();knob.style.transform='translate(0,0)';keys.KeyW=keys.KeyS=keys.KeyA=keys.KeyD=false},{passive:false});
+  for(const b of document.querySelectorAll('#mobile-buttons button')){
+    b.addEventListener('touchstart',e=>{e.preventDefault();keys[b.dataset.key]=true},{passive:false});
+    b.addEventListener('touchend',e=>{e.preventDefault();keys[b.dataset.key]=false},{passive:false});
+  }
+  let lookId=null,lx=0,ly=0;
+  renderer.domElement.addEventListener('touchstart',e=>{if(e.target.closest('#mobile'))return;const t=e.changedTouches[0];lookId=t.identifier;lx=t.clientX;ly=t.clientY},{passive:true});
+  renderer.domElement.addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===lookId){yaw-=(t.clientX-lx)*.006;pitch-=(t.clientY-ly)*.006;pitch=Math.max(-1.5,Math.min(1.5,pitch));lx=t.clientX;ly=t.clientY}},{passive:true});
+  renderer.domElement.addEventListener('touchend',e=>{for(const t of e.changedTouches)if(t.identifier===lookId)lookId=null},{passive:true});
+  document.getElementById('play').addEventListener('touchend',e=>{e.preventDefault();document.getElementById('start').style.display='none'},{passive:false});
+}
