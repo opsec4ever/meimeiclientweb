@@ -36,7 +36,7 @@ const materials={
 };
 
 const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,WOOD:5,LEAVES:6,WATER:7};
-const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D();
+const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D(),broken=new Set();
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
 let yaw=0,pitch=0,locked=false,gameStarted=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0;
@@ -148,7 +148,7 @@ function updateChunks(){
   document.getElementById('chunks').textContent=`CHUNKS: ${chunks.size}`;
 }
 function solid(x,y,z){
-  const b=getBlock(Math.floor(x),Math.floor(y),Math.floor(z));
+  const b=broken.has(`${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`)?B.AIR:getBlock(Math.floor(x),Math.floor(y),Math.floor(z));
   return b!==B.AIR&&b!==B.WATER;
 }
 function collides(p){
@@ -159,7 +159,7 @@ function collides(p){
 function move(dt){
   const speed=keys.ShiftLeft?7:4,d=new THREE.Vector3();
   if(keys.KeyW)d.z-=1;if(keys.KeyS)d.z+=1;if(keys.KeyA)d.x-=1;if(keys.KeyD)d.x+=1;
-  if(d.lengthSq()){d.normalize();const sin=Math.sin(yaw),cos=Math.cos(yaw),x=d.x*cos-d.z*sin,z=d.x*sin+d.z*cos;player.velocity.x=x*speed;player.velocity.z=z*speed}
+  if(d.lengthSq()){d.normalize();const sin=Math.sin(yaw),cos=Math.cos(yaw),x=d.x*cos+d.z*sin,z=-d.x*sin+d.z*cos;player.velocity.x=x*speed;player.velocity.z=z*speed}
   else{player.velocity.x*=.75;player.velocity.z*=.75}
   player.velocity.y-=25*dt;
   if(keys.Space&&player.onGround){player.velocity.y=8;player.onGround=false}
@@ -171,6 +171,20 @@ function move(dt){
   if(player.position.y<-30){player.position.set(0,getHeight(0,0)+3,0);player.velocity.set(0,0,0)}
 }
 function cameraUpdate(){camera.position.set(player.position.x,player.position.y+1.62,player.position.z);camera.rotation.y=yaw;camera.rotation.x=pitch}
+let breaking=false,breakTarget=null,breakStart=0,breakDuration=0,breakStage=-1;
+const breakOverlay=document.createElement('div');breakOverlay.id='break-overlay';document.body.appendChild(breakOverlay);
+function rayBlock(){
+  const origin=camera.position.clone(),dir=new THREE.Vector3();camera.getWorldDirection(dir);
+  for(let d=0;d<=6;d+=.05){const p=origin.clone().addScaledVector(dir,d),x=Math.floor(p.x),y=Math.floor(p.y),z=Math.floor(p.z),type=broken.has(`${x},${y},${z}`)?B.AIR:getBlock(x,y,z);if(type!==B.AIR&&type!==B.WATER)return{x,y,z,type}}
+  return null;
+}
+function hardness(type){return type===B.LEAVES?.18:type===B.GRASS||type===B.DIRT||type===B.SAND?.55:type===B.WOOD?1.05:type===B.STONE?1.5:.8}
+function setBreakStage(stage){if(stage<0){breakOverlay.style.display='none';breakOverlay.style.backgroundImage='none';return}breakOverlay.style.display='block';breakOverlay.style.backgroundImage=`url('https://mcasset.cloud/26.3/assets/minecraft/textures/block/destroy_stage_${stage}.png')`}
+function startBreaking(){if(!gameStarted||mobile)return;const t=rayBlock();if(!t)return;breaking=true;breakTarget=t;breakStart=performance.now();breakDuration=hardness(t.type)*1000;breakStage=0;setBreakStage(0)}
+function stopBreaking(){breaking=false;breakTarget=null;breakStage=-1;setBreakStage(-1)}
+function finishBreaking(t){broken.add(`${t.x},${t.y},${t.z}`);const cx=Math.floor(t.x/CHUNK_SIZE),cz=Math.floor(t.z/CHUNK_SIZE);unloadChunk(cx,cz);createChunk(cx,cz);stopBreaking()}
+document.addEventListener('mousedown',e=>{if(e.button===0)startBreaking()});document.addEventListener('mouseup',e=>{if(e.button===0)stopBreaking()});
+
 function hud(){
   document.getElementById('coords').textContent=`X: ${Math.floor(player.position.x)}  Y: ${Math.floor(player.position.y)}  Z: ${Math.floor(player.position.z)}`;
   frameCount++;const now=performance.now();
@@ -204,7 +218,7 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),.05);
-  if(gameStarted)move(dt);
+  if(gameStarted)move(dt);if(breaking){const t=rayBlock();if(!t||t.x!==breakTarget.x||t.y!==breakTarget.y||t.z!==breakTarget.z)stopBreaking();else{const p=(performance.now()-breakStart)/breakDuration,stage=Math.min(9,Math.floor(p*10));if(stage!==breakStage){breakStage=stage;setBreakStage(stage)}if(p>=1)finishBreaking(t)}}
   cameraUpdate();hud();chunkTimer+=dt;
   if(chunkTimer>.35){updateChunks();chunkTimer=0}
   renderer.render(scene,camera);
