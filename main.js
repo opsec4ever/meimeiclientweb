@@ -119,7 +119,7 @@ document.getElementById('dbg-image').oninput=e=>{debugState.coverImage=e.target.
 document.getElementById('dbg-snap').oninput=e=>{debugState.snap=Math.max(1,+e.target.value||10);saveDebug()};
 document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
 document.getElementById('dbg-add').onclick=()=>addTextHud();
-document.addEventListener('keydown',e=>{if(e.key==="'"){debugOpen=!debugOpen;debugPanel.classList.toggle('open',debugOpen);if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}}});
+document.addEventListener('keydown',e=>{if(e.key==='`'){debugOpen=!debugOpen;debugPanel.classList.toggle('open',debugOpen);if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}}});
 window.addEventListener('load',()=>{setTimeout(()=>{applyDebug();restorePositions();debugState.items.forEach(it=>{const e=document.createElement('div');e.className='custom-hud';e.id=it.id;e.textContent=it.text;e.style.color=it.color;e.style.left='10px';e.style.top='120px';document.body.appendChild(e);makeDraggable(e)});},0)});
 
 
