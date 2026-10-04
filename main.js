@@ -33,7 +33,7 @@ const materials={
   dirt:mat(textures.dirt),stone:mat(textures.stone),sand:mat(textures.sand),
   wood:[mat(textures.oak),mat(textures.oak),mat(textures.oakTop),mat(textures.oakTop),mat(textures.oak),mat(textures.oak)],
   leaves:mat(textures.leaves,{transparent:true,alphaTest:.1,color:0x77ab3a}),
-  water:mat(textures.water,{transparent:true,opacity:.72,depthWrite:false,color:0x3f76e4}),
+  water:mat(textures.water,{transparent:true,opacity:.62,depthWrite:false,depthTest:true,color:0x3f76e4,side:THREE.DoubleSide}),
   deepslate:mat(textures.stone,{color:0x5b5b61}),coal:mat(textures.stone,{color:0x25252a}),iron:mat(textures.stone,{color:0xc49a7a}),copper:mat(textures.stone,{color:0xb66a48}),gold:mat(textures.stone,{color:0xf2c94c}),redstone:mat(textures.stone,{color:0xc63b32}),diamond:mat(textures.stone,{color:0x36d7df}),emerald:mat(textures.stone,{color:0x38c978})
 };
 
@@ -128,7 +128,7 @@ function createChunk(cx,cz){
   for(const block of blocks){
     const n=[[block.x+1,block.y,block.z],[block.x-1,block.y,block.z],[block.x,block.y+1,block.z],[block.x,block.y-1,block.z],[block.x,block.y,block.z+1],[block.x,block.y,block.z-1]];
     let visible=false;
-    for(const [nx,ny,nz] of n){const nb=broken.has(`${nx},${ny},${nz}`)?B.AIR:getBlock(nx,ny,nz);if(nb===B.AIR||nb===B.WATER){visible=true;break}}
+    for(const [nx,ny,nz] of n){const nb=broken.has(`${nx},${ny},${nz}`)?B.AIR:getBlock(nx,ny,nz);if(nb===B.AIR||nb===B.WATER||(type===B.WATER&&nb!==B.WATER)){visible=true;break}}
     if(!visible)continue;
     if(!groups.has(block.type))groups.set(block.type,[]);
     groups.get(block.type).push(block);
@@ -141,7 +141,7 @@ function createChunk(cx,cz){
     for(let i=0;i<list.length;i++){
       const b=list[i];temp.position.set(b.x+.5,b.y+.5,b.z+.5);temp.rotation.set(0,0,0);temp.scale.set(1,1,1);temp.updateMatrix();mesh.setMatrixAt(i,temp.matrix);
     }
-    mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);meshes.push(mesh);
+    mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=type!==B.WATER;mesh.receiveShadow=type!==B.WATER;if(type===B.WATER){mesh.renderOrder=2;mesh.material.forEach(m=>{m.transparent=true;m.depthWrite=false;m.opacity=.62})}scene.add(mesh);meshes.push(mesh);
   }
   chunks.set(k,{cx,cz,meshes});
 }
