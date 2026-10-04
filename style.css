@@ -71,3 +71,20 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
 #survival-hud .offhand-label{display:block;margin-top:2px;color:#aaa;font:6px 'Minecraftia',monospace;text-shadow:1px 1px #000}
 #survival-hud .heart,#survival-hud .food-icon{filter:drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000)}
 @media(max-width:800px){#survival-hud{transform:translateX(-50%) scale(.78);transform-origin:bottom center}}
+
+/* final survival HUD */
+#cps{position:fixed;left:10px;top:28px;z-index:1000;color:#fff;font:12px 'Minecraftia',monospace;text-shadow:2px 2px #000}
+#survival-hud{position:fixed!important;left:50%!important;bottom:8px!important;transform:translateX(-50%)!important;width:430px!important;height:82px!important;z-index:999!important;font-family:'Minecraftia',monospace!important;image-rendering:pixelated!important;pointer-events:none!important}
+#survival-hud .hud-top{width:364px!important;height:18px!important;margin-left:33px!important;display:flex!important;justify-content:space-between!important;padding:0!important}
+#survival-hud .hearts,#survival-hud .food{display:flex!important;width:180px!important;height:18px!important;gap:0!important}
+#survival-hud .heart,#survival-hud .food-icon{width:18px!important;height:18px!important;display:block!important;background-size:18px 18px!important;filter:drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000)!important}
+#survival-hud .xp-wrap{position:relative!important;width:364px!important;height:8px!important;margin:2px 0 2px 33px!important;background:#202020!important;border:1px solid #111!important}
+#survival-hud .xp-fill{position:absolute!important;left:1px!important;top:1px!important;width:0!important;height:4px!important;background:#80d52b!important}
+#survival-hud .xp-level{position:absolute!important;left:50%!important;top:-6px!important;transform:translateX(-50%)!important;font-size:10px!important;color:#80d52b!important;text-shadow:2px 2px #000!important}
+#survival-hud .hotbar-wrap{position:relative!important;width:430px!important;height:46px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+#survival-hud .offhand-slot{position:absolute!important;left:0!important;top:3px!important;width:40px!important;height:40px!important;background:#8b8b8b!important;border:3px solid #111!important;box-shadow:inset 2px 2px #555,inset -2px -2px #ddd!important}
+#survival-hud .hotbar{position:absolute!important;left:50%!important;top:0!important;transform:translateX(-50%)!important;width:364px!important;height:46px!important}
+#survival-hud .hotbar-slots{position:absolute!important;left:2px!important;top:0!important;width:360px!important;height:46px!important;display:grid!important;grid-template-columns:repeat(9,40px)!important}
+#survival-hud .hotbar-slot{width:40px!important;height:46px!important;position:relative!important}
+#survival-hud .hotbar-selection{position:absolute!important;left:calc(2px + var(--selected-slot,0) * 40px)!important;top:-1px!important;width:40px!important;height:46px!important;background-size:40px 46px!important;background-position:center!important;z-index:5!important}
+@media(max-width:800px){#survival-hud{transform:translateX(-50%) scale(.78)!important;transform-origin:bottom center!important}}
