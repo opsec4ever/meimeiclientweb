@@ -141,7 +141,7 @@ function createChunk(cx,cz){
     for(let i=0;i<list.length;i++){
       const b=list[i];temp.position.set(b.x+.5,b.y+.5,b.z+.5);temp.rotation.set(0,0,0);temp.scale.set(1,1,1);temp.updateMatrix();mesh.setMatrixAt(i,temp.matrix);
     }
-    mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=false;mesh.receiveShadow=true;if(list.some(b=>b.type===B.WATER)){mesh.renderOrder=2;mesh.material.forEach(m=>{m.transparent=true;m.depthWrite=false;m.opacity=.62})}scene.add(mesh);meshes.push(mesh);
+    mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=false;mesh.receiveShadow=true;if(list.some(b=>b.type===B.WATER)){mesh.renderOrder=2;const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];for(const m of mats){m.transparent=true;m.depthWrite=false;m.opacity=.62}}scene.add(mesh);meshes.push(mesh);
   }
   chunks.set(k,{cx,cz,meshes});
 }
