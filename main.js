@@ -96,43 +96,71 @@ heldGroup.add(rightArm,leftArm,sleeveR,sleeveL);
 
 const heldItemGroup=new THREE.Group();
 heldGroup.add(heldItemGroup);
-function makeGlintMaterial(base,color=0xffffff){
-  const m=new THREE.MeshLambertMaterial({map:base,color,transparent:true,opacity:.8});
-  m.userData.glint=true;return m;
+
+function makeGlintTexture(){
+  const c=document.createElement('canvas');c.width=32;c.height=32;const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,32,32);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.45,'rgba(255,255,255,.75)');g.addColorStop(.55,'rgba(170,80,255,.9)');g.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=g;x.fillRect(0,0,32,32);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.NearestFilter;return t;
 }
+const glintTexture=makeGlintTexture();
+const glintMaterial=new THREE.MeshBasicMaterial({map:glintTexture,transparent:true,opacity:.7,depthWrite:false});
+const pickaxeGroup=new THREE.Group();
 function addPickaxe(){
-  heldItemGroup.clear();
-  const shaft=new THREE.Mesh(new THREE.BoxGeometry(.07,.75,.07),new THREE.MeshLambertMaterial({color:0x333338}));
-  const head=new THREE.Mesh(new THREE.BoxGeometry(.62,.1,.1),makeGlintMaterial(null,0x9b5cff));
-  const claw=new THREE.Mesh(new THREE.BoxGeometry(.1,.34,.1),makeGlintMaterial(null,0x9b5cff));
-  shaft.position.set(.43,-.48,-.92);shaft.rotation.z=-.18;
-  head.position.set(.43,-.18,-.92);head.rotation.z=-.18;
-  claw.position.set(.68,-.18,-.92);claw.rotation.z=-.95;
-  heldItemGroup.add(shaft,head,claw);
+  pickaxeGroup.clear();
+  const metal=new THREE.MeshLambertMaterial({color:0x3b3545});
+  const purple=new THREE.MeshLambertMaterial({color:0x8f45d9});
+  const shaft=new THREE.Mesh(new THREE.BoxGeometry(.075,.85,.075),metal);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(.62,.095,.105),purple);
+  const hook=new THREE.Mesh(new THREE.BoxGeometry(.10,.34,.10),purple);
+  shaft.position.set(.50,-.48,-.78);shaft.rotation.z=-.22;
+  head.position.set(.50,-.16,-.78);head.rotation.z=-.22;
+  hook.position.set(.73,-.16,-.78);hook.rotation.z=-.95;
+  pickaxeGroup.add(shaft,head,hook);
+  for(const m of [shaft,head,hook]){
+    const overlay=new THREE.Mesh(m.geometry,glintMaterial.clone());
+    overlay.position.copy(m.position);overlay.rotation.copy(m.rotation);overlay.scale.set(1.012,1.012,1.012);pickaxeGroup.add(overlay);
+  }
+  heldItemGroup.add(pickaxeGroup);
 }
 addPickaxe();
 
-const totemDefault='https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png';
-const skinTexture=new THREE.Texture();
-let customSkin='',customTotem='';
-const handCanvas=document.createElement('canvas');
-function applySkin(src){
-  customSkin=src||'';
-  if(src){const im=new Image();im.onload=()=>{skinTexture.image=im;skinTexture.needsUpdate=true;rightArm.material.map=skinTexture;leftArm.material.map=skinTexture;rightArm.material.color.set(0xffffff);leftArm.material.color.set(0xffffff)};im.src=src}
+const totemCanvas=document.createElement('canvas');totemCanvas.width=64;totemCanvas.height=64;
+const totemCtx=totemCanvas.getContext('2d');
+const totemTexture=new THREE.CanvasTexture(totemCanvas);totemTexture.colorSpace=THREE.SRGBColorSpace;totemTexture.magFilter=totemTexture.minFilter=THREE.NearestFilter;
+const totemMesh=new THREE.Mesh(new THREE.PlaneGeometry(.42,.62),new THREE.MeshBasicMaterial({map:totemTexture,transparent:true,depthWrite:false}));
+totemMesh.position.set(-.52,-.42,-.78);totemMesh.rotation.set(.15,.15,-.08);heldItemGroup.add(totemMesh);
+let totemImage=null;
+function drawTotem(){
+  if(!totemImage)return;
+  totemCtx.clearRect(0,0,64,64);
+  totemCtx.drawImage(totemImage,0,0,64,64);
+  totemTexture.needsUpdate=true;
 }
 function applyTotem(src){
   customTotem=src||'';
-  const slot=document.querySelector('.offhand-slot');if(slot)slot.style.backgroundImage='url("'+(src||totemDefault)+'")';
+  const slot=document.querySelector('.offhand-slot');
+  if(slot)slot.style.backgroundImage='url("'+(src||totemDefault)+'")';
+  const im=new Image();
+  im.onload=()=>{totemImage=im;drawTotem()};
+  im.src=src||totemDefault;
 }
 applyTotem('');
+
 function updateHeldView(){
   const d=Number(debugState.armDistance||1);
   heldGroup.position.set(0,0,-.05*(d-1));
   heldGroup.scale.setScalar(d);
-  heldGroup.visible=debugState.showArms!==false;
-  if(debugState.thirdPerson){heldGroup.visible=false}
+  heldGroup.visible=debugState.showArms!==false&&!debugState.thirdPerson;
 }
-
+function animateHeld(){
+  const t=performance.now()*0.001;
+  const bob=Math.sin(t*5)*.012;
+  pickaxeGroup.position.y=bob;
+  totemMesh.position.y=-.42+bob*.7;
+  if(totemImage&&totemImage.complete)drawTotem();
+  glintTexture.offset.x=(t*.35)%1;
+  glintTexture.offset.y=(t*.18)%1;
+}
 const debugState={scoreTitle:'MeiMei',balance:'100k',hideBottom:false,coverImage:'',snap:10,items:[],armDistance:1,showArms:true,thirdPerson:false,cameraKey:'V',skin:'',totem:''};
 let debugOpen=false;
 const debugPanel=document.createElement('div');debugPanel.id='debug-panel';debugPanel.innerHTML=`
@@ -186,9 +214,16 @@ document.getElementById('dbg-totem').onchange=e=>{const f=e.target.files?.[0];if
 document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
 document.getElementById('dbg-add').onclick=()=>addTextHud();
 document.addEventListener('keydown',e=>{
-  if(e.code==='KeyG'){e.preventDefault();debugOpen=!debugOpen;debugPanel.classList.toggle('open',debugOpen);if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}}
+  if(e.code==='KeyG'){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    debugOpen=!debugOpen;
+    debugPanel.classList.toggle('open',debugOpen);
+    if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}
+    return;
+  }
   if(e.code==='KeyV'){debugState.thirdPerson=!debugState.thirdPerson;updateHeldView()}
-});
+},true);
 window.addEventListener('load',()=>{setTimeout(()=>{applyDebug();restorePositions();debugState.items.forEach(it=>{const e=document.createElement('div');e.className='custom-hud';e.id=it.id;e.textContent=it.text;e.style.color=it.color;e.style.left='10px';e.style.top='120px';document.body.appendChild(e);makeDraggable(e)});},0)});
 
 
@@ -460,7 +495,7 @@ function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),.05);
   if(gameStarted&&!inventoryOpen)move(dt);for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.age+=dt;d.velocity.y-=14*dt;d.mesh.position.addScaledVector(d.velocity,dt);d.mesh.rotation.x+=dt*2;d.mesh.rotation.y+=dt*3;const gy=getHeight(Math.floor(d.mesh.position.x),Math.floor(d.mesh.position.z))+.25;if(d.mesh.position.y<gy){d.mesh.position.y=gy;d.velocity.y*=-.35;d.velocity.x*=.8;d.velocity.z*=.8}const dx=player.position.x-d.mesh.position.x,dy=player.position.y+.7-d.mesh.position.y,dz=player.position.z-d.mesh.position.z,dist=Math.hypot(dx,dy,dz);if(dist<2.2){const f=Math.min(8,3+5/(dist+.25));d.velocity.x+=dx*f*dt;d.velocity.y+=dy*f*dt;d.velocity.z+=dz*f*dt}if(d.age>20){scene.remove(d.mesh);drops.splice(i,1)}else if(dist<.55){if(addToInventory(d.type)){scene.remove(d.mesh);drops.splice(i,1)}}}if(breaking){const t=rayBlock();if(!t||t.x!==breakTarget.x||t.y!==breakTarget.y||t.z!==breakTarget.z)stopBreaking();else{const p=(performance.now()-breakStart)/breakDuration,stage=Math.min(9,Math.floor(p*10));if(stage!==breakStage){breakStage=stage;setBreakStage(stage,breakTarget)}if(p>=1)finishBreaking(t)}}
-  cameraUpdate();hud();chunkTimer+=dt;
+  cameraUpdate();animateHeld();hud();chunkTimer+=dt;
   if(chunkTimer>.35){updateChunks();chunkTimer=0}
   renderer.render(scene,camera);
 }
