@@ -137,6 +137,9 @@ function drawTotem(){
   totemCtx.drawImage(totemImage,0,0,64,64);
   totemTexture.needsUpdate=true;
 }
+function applySkin(src){
+  customSkin=src||'';
+}
 function applyTotem(src){
   customTotem=src||'';
   const slot=document.querySelector('.offhand-slot');
@@ -180,7 +183,7 @@ const debugPanel=document.createElement('div');debugPanel.id='debug-panel';debug
 document.body.appendChild(debugPanel);
 function saveDebug(){try{localStorage.setItem('meimei-debug',JSON.stringify(debugState))}catch{}}
 try{Object.assign(debugState,JSON.parse(localStorage.getItem('meimei-debug')||'{}'))}catch{}
-setTimeout(()=>{applySkin(debugState.skin);applyTotem(debugState.totem);updateHeldView();const a=document.getElementById('dbg-arm'),k=document.getElementById('dbg-camera-key');if(a)a.value=debugState.armDistance||1;if(k)k.value=debugState.cameraKey||'V'},0);
+setTimeout(()=>{applyTotem(debugState.totem);updateHeldView();const a=document.getElementById('dbg-arm'),k=document.getElementById('dbg-camera-key');if(a)a.value=debugState.armDistance||1;if(k)k.value=debugState.cameraKey||'V'},0);
 function snap(v){const n=debugState.snap||10;return Math.round(v/n)*n}
 function applyDebug(){
  const sb=document.getElementById('scoreboard');if(sb){sb.querySelector('.score-title').textContent=debugState.scoreTitle||'MeiMei';sb.querySelector('.score-value').textContent=String(debugState.balance||'218.25M')}
@@ -210,7 +213,7 @@ document.getElementById('dbg-arm').oninput=e=>{debugState.armDistance=+e.target.
 document.getElementById('dbg-arms').onclick=()=>{debugState.showArms=!debugState.showArms;document.getElementById('dbg-arms').textContent=debugState.showArms?'hide arms':'show arms';updateHeldView();saveDebug()};
 document.getElementById('dbg-camera').onclick=()=>{debugState.thirdPerson=!debugState.thirdPerson;document.getElementById('dbg-camera').textContent=debugState.thirdPerson?'first person':'third person';updateHeldView();saveDebug()};
 document.getElementById('dbg-camera-key').oninput=e=>{debugState.cameraKey=(e.target.value||'V').slice(0,1).toUpperCase();saveDebug()};
-document.getElementById('dbg-skin').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{debugState.skin=r.result;applySkin(r.result);saveDebug()};r.readAsDataURL(f)};
+document.getElementById('dbg-skin').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{debugState.skin=r.result;saveDebug()};r.readAsDataURL(f)};
 document.getElementById('dbg-totem').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{debugState.totem=r.result;applyTotem(r.result);saveDebug()};r.readAsDataURL(f)};
 document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
 document.getElementById('dbg-add').onclick=()=>addTextHud();
