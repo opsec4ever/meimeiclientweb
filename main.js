@@ -79,19 +79,79 @@ const inventoryCounts=new Array(9).fill(0);
 const HOTBAR_ICONS=['grass_block_top','dirt','stone','sand','oak_log','oak_leaves','deepslate','stone','bedrock'].map(n=>ASSET_BASE+n+'.png');
 
 const clock=new THREE.Clock();
-const debugState={scoreTitle:'MeiMei',balance:'100k',hideBottom:false,coverImage:'',snap:10,items:[]};
+
+const heldGroup=new THREE.Group();
+camera.add(heldGroup);
+const armMaterial=new THREE.MeshLambertMaterial({color:0xd49a78});
+const sleeveMaterial=new THREE.MeshLambertMaterial({color:0x5b2ca0});
+const rightArm=new THREE.Mesh(new THREE.BoxGeometry(.22,.72,.22),armMaterial);
+const leftArm=new THREE.Mesh(new THREE.BoxGeometry(.22,.72,.22),armMaterial);
+const sleeveR=new THREE.Mesh(new THREE.BoxGeometry(.24,.34,.24),sleeveMaterial);
+const sleeveL=new THREE.Mesh(new THREE.BoxGeometry(.24,.34,.24),sleeveMaterial);
+rightArm.position.set(.42,-.43,-.72);rightArm.rotation.set(-.35,-.2,.18);
+leftArm.position.set(-.42,-.45,-.68);leftArm.rotation.set(-.3,.2,-.18);
+sleeveR.position.set(.42,-.25,-.7);sleeveR.rotation.copy(rightArm.rotation);
+sleeveL.position.set(-.42,-.27,-.66);sleeveL.rotation.copy(leftArm.rotation);
+heldGroup.add(rightArm,leftArm,sleeveR,sleeveL);
+
+const heldItemGroup=new THREE.Group();
+heldGroup.add(heldItemGroup);
+function makeGlintMaterial(base,color=0xffffff){
+  const m=new THREE.MeshLambertMaterial({map:base,color,transparent:true,opacity:.8});
+  m.userData.glint=true;return m;
+}
+function addPickaxe(){
+  heldItemGroup.clear();
+  const shaft=new THREE.Mesh(new THREE.BoxGeometry(.07,.75,.07),new THREE.MeshLambertMaterial({color:0x333338}));
+  const head=new THREE.Mesh(new THREE.BoxGeometry(.62,.1,.1),makeGlintMaterial(null,0x9b5cff));
+  const claw=new THREE.Mesh(new THREE.BoxGeometry(.1,.34,.1),makeGlintMaterial(null,0x9b5cff));
+  shaft.position.set(.43,-.48,-.92);shaft.rotation.z=-.18;
+  head.position.set(.43,-.18,-.92);head.rotation.z=-.18;
+  claw.position.set(.68,-.18,-.92);claw.rotation.z=-.95;
+  heldItemGroup.add(shaft,head,claw);
+}
+addPickaxe();
+
+const totemDefault='https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png';
+const skinTexture=new THREE.Texture();
+let customSkin='',customTotem='';
+const handCanvas=document.createElement('canvas');
+function applySkin(src){
+  customSkin=src||'';
+  if(src){const im=new Image();im.onload=()=>{skinTexture.image=im;skinTexture.needsUpdate=true;rightArm.material.map=skinTexture;leftArm.material.map=skinTexture;rightArm.material.color.set(0xffffff);leftArm.material.color.set(0xffffff)};im.src=src}
+}
+function applyTotem(src){
+  customTotem=src||'';
+  const slot=document.querySelector('.offhand-slot');if(slot)slot.style.backgroundImage='url("'+(src||totemDefault)+'")';
+}
+applyTotem('');
+function updateHeldView(){
+  const d=Number(debugState.armDistance||1);
+  heldGroup.position.set(0,0,-.05*(d-1));
+  heldGroup.scale.setScalar(d);
+  heldGroup.visible=debugState.showArms!==false;
+  if(debugState.thirdPerson){heldGroup.visible=false}
+}
+
+const debugState={scoreTitle:'MeiMei',balance:'100k',hideBottom:false,coverImage:'',snap:10,items:[],armDistance:1,showArms:true,thirdPerson:false,cameraKey:'V',skin:'',totem:''};
 let debugOpen=false;
 const debugPanel=document.createElement('div');debugPanel.id='debug-panel';debugPanel.innerHTML=`
 <div class="dbg-box"><div class="dbg-title">HUD DEBUG</div>
 <label>scoreboard title<input id="dbg-title" value="MeiMei"></label>
 <label>balance<input id="dbg-balance" value="100k"></label>
 <label>bottom HUD image<input id="dbg-image" placeholder="image URL"></label>
+<label>arm distance <input id="dbg-arm" type="range" min="0.4" max="2.2" step="0.05" value="1"></label>
+<label>camera keybind <input id="dbg-camera-key" maxlength="1" value="V"></label>
+<label>skin <input id="dbg-skin" type="file" accept="image/png,image/jpeg,image/webp"></label>
+<label>custom totem <input id="dbg-totem" type="file" accept="image/png,image/jpeg,image/webp"></label>
+<div class="dbg-row"><button id="dbg-hide">hide bottom hud</button><button id="dbg-arms">hide arms</button></div>
+<div class="dbg-row"><button id="dbg-camera">third person</button><button id="dbg-add">add text hud</button></div>
 <label>snap <input id="dbg-snap" type="number" min="1" max="50" value="10"></label>
-<div class="dbg-row"><button id="dbg-hide">hide bottom hud</button><button id="dbg-add">add text hud</button></div>
 <div id="dbg-texts"></div><div class="dbg-help">F3 + G to close/open · drag HUDs · right-click text to remove</div></div>`;
 document.body.appendChild(debugPanel);
 function saveDebug(){try{localStorage.setItem('meimei-debug',JSON.stringify(debugState))}catch{}}
 try{Object.assign(debugState,JSON.parse(localStorage.getItem('meimei-debug')||'{}'))}catch{}
+setTimeout(()=>{applySkin(debugState.skin);applyTotem(debugState.totem);updateHeldView();const a=document.getElementById('dbg-arm'),k=document.getElementById('dbg-camera-key');if(a)a.value=debugState.armDistance||1;if(k)k.value=debugState.cameraKey||'V'},0);
 function snap(v){const n=debugState.snap||10;return Math.round(v/n)*n}
 function applyDebug(){
  const sb=document.getElementById('scoreboard');if(sb){sb.querySelector('.score-title').textContent=debugState.scoreTitle||'MeiMei';sb.querySelector('.score-value').textContent=String(debugState.balance||'218.25M')}
@@ -117,10 +177,17 @@ document.getElementById('dbg-title').oninput=e=>{debugState.scoreTitle=e.target.
 document.getElementById('dbg-balance').oninput=e=>{debugState.balance=e.target.value;applyDebug();saveDebug()};
 document.getElementById('dbg-image').oninput=e=>{debugState.coverImage=e.target.value;applyDebug();saveDebug()};
 document.getElementById('dbg-snap').oninput=e=>{debugState.snap=Math.max(1,+e.target.value||10);saveDebug()};
+document.getElementById('dbg-arm').oninput=e=>{debugState.armDistance=+e.target.value;updateHeldView();saveDebug()};
+document.getElementById('dbg-arms').onclick=()=>{debugState.showArms=!debugState.showArms;document.getElementById('dbg-arms').textContent=debugState.showArms?'hide arms':'show arms';updateHeldView();saveDebug()};
+document.getElementById('dbg-camera').onclick=()=>{debugState.thirdPerson=!debugState.thirdPerson;document.getElementById('dbg-camera').textContent=debugState.thirdPerson?'first person':'third person';updateHeldView();saveDebug()};
+document.getElementById('dbg-camera-key').oninput=e=>{debugState.cameraKey=(e.target.value||'V').slice(0,1).toUpperCase();saveDebug()};
+document.getElementById('dbg-skin').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{debugState.skin=r.result;applySkin(r.result);saveDebug()};r.readAsDataURL(f)};
+document.getElementById('dbg-totem').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{debugState.totem=r.result;applyTotem(r.result);saveDebug()};r.readAsDataURL(f)};
 document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
 document.getElementById('dbg-add').onclick=()=>addTextHud();
 document.addEventListener('keydown',e=>{
   if(e.code==='KeyG'){e.preventDefault();debugOpen=!debugOpen;debugPanel.classList.toggle('open',debugOpen);if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}}
+  if(e.code==='KeyV'){debugState.thirdPerson=!debugState.thirdPerson;updateHeldView()}
 });
 window.addEventListener('load',()=>{setTimeout(()=>{applyDebug();restorePositions();debugState.items.forEach(it=>{const e=document.createElement('div');e.className='custom-hud';e.id=it.id;e.textContent=it.text;e.style.color=it.color;e.style.left='10px';e.style.top='120px';document.body.appendChild(e);makeDraggable(e)});},0)});
 
