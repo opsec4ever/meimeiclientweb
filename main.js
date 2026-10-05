@@ -80,47 +80,75 @@ const HOTBAR_ICONS=['grass_block_top','dirt','stone','sand','oak_log','oak_leave
 
 const clock=new THREE.Clock();
 
+const defaultSkin='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAzFBMVEUAAAAiULooWMMxZMQ7Rlo7bslAd81IgtJPXnpTj9lbmN1mo+NvfpxwrOZ7t+yKwu2Xy+6i1vSt3ve5sa26sa69tbHBzt/C6PrEtrLEurbMwb3M8P/NvbrNwr7Q4/PRxsLSwr7WxsLa6vbcysbcy8fdy8fezMjezcje9f/fzcngzsrhz8vh5ebi0Mzi7PDo1dDp1tHp19Lp9f/q19Lv29bz39n14dv45N755d/+4tT/2sv/28z/3M3/3c3/3s7/5df/5tj/8OT/8eX///9tosDZAAAAAXRSTlMAQObYZgAABIBJREFUWMPFVw1X2koQXYFASQrJ5uWVEljBpCitUnDRaKutyv7///Tu7GYhkUhj7embg7PfN7MzszMjYzlxHoI4j6JjKY+jiD0nHjIWcnRonbGK9QEo5MPoX1A0rFhnbKARqikcjECDUEw0if114oPwAAAQIMIkJ/ZakhJK4FJOJj8fHn7uA0i545WUQDfQToLzmw0QXlp/EWDyJZEy+TKZ/CCAHxVXoPUDVxBCfPwINrl/CQCLosp8uLpMRIESSf5g/YLsb74sFgthJNH+YP0C9oXqznfnZ1An7M3JrqY1qluIq4VYGEXm89ovsI/LZL0DWCeS42Q4mM/lnFpGEiwWV4vbK7AFScDMvPaLcMQTeZ4JcfcAuhMiO5cJH4XhaC7lfBQamQFwSwC3AGBlXXJ8XwO0WptNq2UAJFQwGOH8gNN+A8Bur1gOIMvGOc7O16L1/t1m8+59S6zPM5g8SYxjJYl5OnSQXeWtWdeOldBgvRYz0fr64f7+w9cWuus1Dh1Lsju1eqc+uG0L6ywais+fSXl3ZP876mE8jPae9WLLcio866bT7siCn1mDYLrb7bQdO+8H/KjRrHAm2lgFgGnXBYKdD3jY2Dj1AL5/rwRQ1QAVV/j2re4Vmo7TJADair1NKJXo8VE3pEzEODBfBT4AyLY88AsAT0RAAEQb55+iMBQiFeCpwO4oOolO8Pun7/v9vgpwiyDw+88Bnp4eNaETcSXEEgEuXIqAgvTZ+OxkfBb1+v1eDyg47vfVAYBxEMCduQp5JvxAjceX08tP08ux11OeBxQSpOcdAJj6/izNlpwvsxS7p9Ob05vV6c3U9TxXAYUE8dziWzB0rAmdGe3IlkGwzCByf3ZqAE7JoF2g4Lhyu6Voq8kAoBOr3mqVLX1/ma1WvV4cG4BYkZWAAkHgGvsARg4C8DwAkMoA4HlxfB1fr8C0lToKEKrgWlUArpumWdpTYKnrxvEqXuEXw9Bq5y4HALADVhCeBybwsU4cp2kcd3KHayvtLgcA8BHVTkllqTJid+MYQjeazUZDOYBwnIvGAQC9gy7baTt5H1JfOEeqcYSHoAVpHD1/D+yN5PzvAG+6gtZKEWtYyKBiWBvFxgP2Z2i5ZURnJ688LsQ1NdemHLhkl5/ATDwwG0rxoILS1AAstQw37GYFZuKB2VCOByYibIPDHlwOYOKBmSrFgwpaMSMBOjuA11AZAGNqzcMyE6V4UANOMxMPzFT7V64rSg3FA5uActf/pbukW/b3qCQU5UgKLts6KvD3g8ihF03RqAigeOBsGm8ACGsAvPkKTRsXbJ1gzHbR0QWBMlk5qPqHpxQHCnWCrRuQ4qkg6Cv8+UENc9gsbbM2UjwyOuVZZGb/NwBMQaAoK6M8yDfZcR2AnikIEA6Uuz1hx+UiQXNm6wRbN3gKn3K7ypQHzAYEVQgPZbJ1gq0bdCTqmqzcVTV0YHOkzZk6EunSgPLs1lHMuA4APq12edbaPh/XATB+obRfXdgT+VjVAVD0KSoN8Nd0fkMHeUFw1NDlwf7+/wA0q9+Nt/XEoAAAAABJRU5ErkJggg==';
+let customSkin=defaultSkin;
+const skinImage=new Image();
+skinImage.src=defaultSkin;
+
 const heldGroup=new THREE.Group();
 camera.add(heldGroup);
-const armMaterial=new THREE.MeshBasicMaterial({color:0xd49a78,depthTest:false,depthWrite:false});
+heldGroup.position.set(0,0,0);
+
+const armMaterial=new THREE.MeshBasicMaterial({color:0xd49a78,depthTest:false,depthWrite:false,transparent:true});
 const sleeveMaterial=new THREE.MeshBasicMaterial({color:0x5b2ca0,depthTest:false,depthWrite:false});
-const rightArm=new THREE.Mesh(new THREE.BoxGeometry(.22,.72,.22),armMaterial);
-const leftArm=new THREE.Mesh(new THREE.BoxGeometry(.22,.72,.22),armMaterial);
-const sleeveR=new THREE.Mesh(new THREE.BoxGeometry(.24,.34,.24),sleeveMaterial);
-const sleeveL=new THREE.Mesh(new THREE.BoxGeometry(.24,.34,.24),sleeveMaterial);
-rightArm.position.set(.42,-.43,-.72);rightArm.rotation.set(-.35,-.2,.18);
-leftArm.position.set(-.42,-.45,-.68);leftArm.rotation.set(-.3,.2,-.18);
-sleeveR.position.set(.42,-.25,-.7);sleeveR.rotation.copy(rightArm.rotation);
-sleeveL.position.set(-.42,-.27,-.66);sleeveL.rotation.copy(leftArm.rotation);
+const rightArm=new THREE.Mesh(new THREE.BoxGeometry(.24,.72,.24),armMaterial);
+const leftArm=new THREE.Mesh(new THREE.BoxGeometry(.24,.72,.24),armMaterial);
+const sleeveR=new THREE.Mesh(new THREE.BoxGeometry(.26,.34,.26),sleeveMaterial);
+const sleeveL=new THREE.Mesh(new THREE.BoxGeometry(.26,.34,.26),sleeveMaterial);
+rightArm.position.set(.42,-.43,-.62);leftArm.position.set(-.42,-.45,-.62);
+rightArm.rotation.set(-.35,-.2,.18);leftArm.rotation.set(-.3,.2,-.18);
+sleeveR.position.set(.42,-.25,-.60);sleeveL.position.set(-.42,-.27,-.60);
+sleeveR.rotation.copy(rightArm.rotation);sleeveL.rotation.copy(leftArm.rotation);
 heldGroup.add(rightArm,leftArm,sleeveR,sleeveL);
-heldGroup.renderOrder=9999;
-rightArm.renderOrder=10000;leftArm.renderOrder=10000;sleeveR.renderOrder=10000;sleeveL.renderOrder=10000;
+
+function makeSkinPatch(x,y,w,h,mirror=false){
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
+  cx.drawImage(skinImage,x,y,w,h,0,0,w,h);
+  const tx=new THREE.CanvasTexture(cv);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.colorSpace=THREE.SRGBColorSpace;
+  const mat=new THREE.MeshBasicMaterial({map:tx,transparent:true,side:THREE.DoubleSide,depthTest:false,depthWrite:false});
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(.26,.72),mat);
+  mesh.frustumCulled=false;
+  if(mirror){mesh.scale.x=-1}
+  return mesh;
+}
+skinImage.onload=()=>{
+  const ra=makeSkinPatch(44,20,4,12);
+  const la=makeSkinPatch(36,52,4,12,true);
+  ra.position.set(.42,-.43,-.78);la.position.set(-.42,-.45,-.78);
+  ra.rotation.set(-.35,-.2,.18);la.rotation.set(-.3,.2,-.18);
+  heldGroup.add(ra,la);
+};
 
 const heldItemGroup=new THREE.Group();
 heldGroup.add(heldItemGroup);
 
 function makeGlintTexture(){
-  const c=document.createElement('canvas');c.width=32;c.height=32;const x=c.getContext('2d');
-  const g=x.createLinearGradient(0,0,32,32);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.45,'rgba(255,255,255,.75)');g.addColorStop(.55,'rgba(170,80,255,.9)');g.addColorStop(1,'rgba(255,255,255,0)');
-  x.fillStyle=g;x.fillRect(0,0,32,32);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.NearestFilter;return t;
+  const cv=document.createElement('canvas');cv.width=32;cv.height=32;
+  const x=cv.getContext('2d');const g=x.createLinearGradient(0,0,32,32);
+  g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.45,'rgba(255,255,255,.7)');
+  g.addColorStop(.55,'rgba(180,80,255,.95)');g.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=g;x.fillRect(0,0,32,32);
+  const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.NearestFilter;return t;
 }
 const glintTexture=makeGlintTexture();
-const glintMaterial=new THREE.MeshBasicMaterial({map:glintTexture,transparent:true,opacity:.7,depthWrite:false});
+const glintMaterial=new THREE.MeshBasicMaterial({map:glintTexture,transparent:true,opacity:.75,depthWrite:false,depthTest:false});
 const pickaxeGroup=new THREE.Group();
 function addPickaxe(){
   pickaxeGroup.clear();
-  const metal=new THREE.MeshBasicMaterial({color:0x25212d,depthTest:false,depthWrite:false});
+  const metal=new THREE.MeshBasicMaterial({color:0x30283a,depthTest:false,depthWrite:false});
   const purple=new THREE.MeshBasicMaterial({color:0xb45cff,depthTest:false,depthWrite:false});
-  const shaft=new THREE.Mesh(new THREE.BoxGeometry(.075,.85,.075),metal);
-  const head=new THREE.Mesh(new THREE.BoxGeometry(.62,.095,.105),purple);
+  const shaft=new THREE.Mesh(new THREE.BoxGeometry(.07,.82,.07),metal);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(.64,.10,.10),purple);
   const hook=new THREE.Mesh(new THREE.BoxGeometry(.10,.34,.10),purple);
-  shaft.position.set(.50,-.48,-.78);shaft.rotation.z=-.22;
-  head.position.set(.50,-.16,-.78);head.rotation.z=-.22;
-  hook.position.set(.73,-.16,-.78);hook.rotation.z=-.95;
-  pickaxeGroup.add(shaft,head,hook);
+  shaft.position.set(.47,-.47,-.82);shaft.rotation.z=-.22;
+  head.position.set(.47,-.16,-.82);head.rotation.z=-.22;
+  hook.position.set(.71,-.16,-.82);hook.rotation.z=-.95;
   for(const m of [shaft,head,hook]){
-    const overlay=new THREE.Mesh(m.geometry,glintMaterial.clone());
-    overlay.position.copy(m.position);overlay.rotation.copy(m.rotation);overlay.scale.set(1.012,1.012,1.012);pickaxeGroup.add(overlay);
+    m.frustumCulled=false;
+    pickaxeGroup.add(m);
+    const g=glintMaterial.clone();const overlay=new THREE.Mesh(m.geometry,g);
+    overlay.position.copy(m.position);overlay.rotation.copy(m.rotation);overlay.scale.setScalar(1.015);overlay.frustumCulled=false;pickaxeGroup.add(overlay);
   }
   heldItemGroup.add(pickaxeGroup);
 }
@@ -130,42 +158,30 @@ let customTotem='';
 const totemCanvas=document.createElement('canvas');totemCanvas.width=64;totemCanvas.height=64;
 const totemCtx=totemCanvas.getContext('2d');
 const totemTexture=new THREE.CanvasTexture(totemCanvas);totemTexture.colorSpace=THREE.SRGBColorSpace;totemTexture.magFilter=totemTexture.minFilter=THREE.NearestFilter;
-const totemMesh=new THREE.Mesh(new THREE.PlaneGeometry(.42,.62),new THREE.MeshBasicMaterial({map:totemTexture,transparent:true,depthWrite:false,depthTest:false}));
-totemMesh.position.set(-.52,-.42,-.78);totemMesh.rotation.set(.15,.15,-.08);heldItemGroup.add(totemMesh);
+const totemMesh=new THREE.Mesh(new THREE.PlaneGeometry(.42,.62),new THREE.MeshBasicMaterial({map:totemTexture,transparent:true,depthWrite:false,depthTest:false,side:THREE.DoubleSide}));
+totemMesh.frustumCulled=false;
+totemMesh.position.set(-.52,-.42,-.82);totemMesh.rotation.set(.15,.15,-.08);heldItemGroup.add(totemMesh);
 let totemImage=null;
-function drawTotem(){
-  if(!totemImage)return;
-  totemCtx.clearRect(0,0,64,64);
-  totemCtx.drawImage(totemImage,0,0,64,64);
-  totemTexture.needsUpdate=true;
-}
-function applySkin(src){
-  customSkin=src||'';
-}
+function drawTotem(){if(!totemImage)return;totemCtx.clearRect(0,0,64,64);totemCtx.drawImage(totemImage,0,0,64,64);totemTexture.needsUpdate=true}
+function applySkin(src){customSkin=src||defaultSkin}
 function applyTotem(src){
   customTotem=src||'';
-  const slot=document.querySelector('.offhand-slot');
-  if(slot)slot.style.backgroundImage='url("'+(src||'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png')+'")';
-  const im=new Image();
-  im.onload=()=>{totemImage=im;drawTotem()};
-  im.src=src||'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png';
+  const fallback='https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png';
+  const use=src||fallback;const slot=document.querySelector('.offhand-slot');
+  if(slot)slot.style.backgroundImage='url("'+use+'")';
+  const im=new Image();im.onload=()=>{totemImage=im;drawTotem()};im.src=use;
 }
 applyTotem('');
 
 function updateHeldView(){
   const d=Number(debugState.armDistance||1);
-  heldGroup.position.set(0,0,-.05*(d-1));
   heldGroup.scale.setScalar(d);
-  heldGroup.visible=debugState.showArms!==false;
+  heldGroup.visible=!debugState.thirdPerson&&debugState.showArms!==false;
 }
 function animateHeld(){
-  const t=performance.now()*0.001;
-  const bob=Math.sin(t*5)*.012;
-  pickaxeGroup.position.y=bob;
-  totemMesh.position.y=-.42+bob*.7;
-  if(totemImage&&totemImage.complete)drawTotem();
-  glintTexture.offset.x=(t*.35)%1;
-  glintTexture.offset.y=(t*.18)%1;
+  const t=performance.now()*.001,bob=Math.sin(t*5)*.012;
+  pickaxeGroup.position.y=bob;totemMesh.position.y=-.42+bob*.7;
+  glintTexture.offset.x=(t*.35)%1;glintTexture.offset.y=(t*.18)%1;
 }
 const debugState={scoreTitle:'MeiMei',balance:'100k',hideBottom:false,coverImage:'',snap:10,items:[],armDistance:1,showArms:true,thirdPerson:false,cameraKey:'V',skin:'',totem:''};
 let debugOpen=false;
@@ -213,7 +229,7 @@ document.getElementById('dbg-image').oninput=e=>{debugState.coverImage=e.target.
 document.getElementById('dbg-snap').oninput=e=>{debugState.snap=Math.max(1,+e.target.value||10);saveDebug()};
 document.getElementById('dbg-arm').oninput=e=>{debugState.armDistance=+e.target.value;updateHeldView();saveDebug()};
 document.getElementById('dbg-arms').onclick=()=>{debugState.showArms=!debugState.showArms;document.getElementById('dbg-arms').textContent=debugState.showArms?'hide arms':'show arms';updateHeldView();saveDebug()};
-document.getElementById('dbg-camera').onclick=()=>{debugState.thirdPerson=!debugState.thirdPerson;document.getElementById('dbg-camera').textContent=debugState.thirdPerson?'first person':'third person';updateHeldView();saveDebug()};
+document.getElementById('dbg-camera').onclick=()=>{debugState.thirdPerson=!debugState.thirdPerson;document.getElementById('dbg-camera').textContent=debugState.thirdPerson?'first person':'third person';updateHeldView();cameraUpdate();saveDebug()};
 document.getElementById('dbg-camera-key').oninput=e=>{debugState.cameraKey=(e.target.value||'V').slice(0,1).toUpperCase();saveDebug()};
 document.getElementById('dbg-skin').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{debugState.skin=r.result;saveDebug()};r.readAsDataURL(f)};
 document.getElementById('dbg-totem').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{debugState.totem=r.result;applyTotem(r.result);saveDebug()};r.readAsDataURL(f)};
@@ -397,7 +413,20 @@ function move(dt){
   if(collides(player.position)){player.position.y=old.y;if(player.velocity.y<0)player.onGround=true;player.velocity.y=0}else player.onGround=false;
   if(player.position.y<WORLD_MIN-10){player.position.set(0,getHeight(0,0)+3,0);player.velocity.set(0,0,0)}
 }
-function cameraUpdate(){camera.position.set(player.position.x,player.position.y+1.62,player.position.z);camera.rotation.y=yaw;camera.rotation.x=pitch}
+function cameraUpdate(){
+  if(debugState.thirdPerson){
+    heldGroup.visible=false;
+    const back=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
+    camera.position.copy(player.position).add(new THREE.Vector3(0,1.1,0)).addScaledVector(back,-4);
+    camera.lookAt(player.position.x,player.position.y+1.25,player.position.z);
+  }else{
+    camera.position.set(player.position.x,player.position.y+1.62,player.position.z);
+    camera.rotation.order='YXZ';
+    camera.rotation.y=yaw;
+    camera.rotation.x=pitch;
+    heldGroup.visible=debugState.showArms!==false;
+  }
+}
 let breaking=false,breakTarget=null,breakStart=0,breakDuration=0,breakStage=-1;
 const destroyTextures=Array.from({length:10},(_,i)=>loader.load(`https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/block/destroy_stage_${i}.png`));
 for(const t of destroyTextures){t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace}
