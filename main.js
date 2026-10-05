@@ -124,7 +124,7 @@ function addPickaxe(){
 }
 addPickaxe();
 
-const totemDefault='';
+var totemDefault='https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png';
 let customTotem='';
 const totemCanvas=document.createElement('canvas');totemCanvas.width=64;totemCanvas.height=64;
 const totemCtx=totemCanvas.getContext('2d');
