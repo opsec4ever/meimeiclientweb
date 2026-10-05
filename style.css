@@ -122,7 +122,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
 #scoreboard .score-row{display:flex;align-items:center;justify-content:flex-start;height:20px;line-height:20px;white-space:nowrap}
 #scoreboard .score-icon{width:20px;text-align:left;font-family:Arial,sans-serif;font-weight:400;font-size:15px;line-height:20px;text-shadow:1px 1px 0 #000}
 #scoreboard .score-value{color:#fff;font:12px 'Minecraftia',monospace;line-height:20px;text-shadow:1px 1px 0 #000}
-#scoreboard .money{color:#fff}
+#scoreboard .money{color:#55ff55}
 #hud-cover{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:430px;height:82px;object-fit:fill;z-index:998;pointer-events:none}
 #fps,#cps{cursor:move;pointer-events:auto}
 
