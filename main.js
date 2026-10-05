@@ -82,8 +82,8 @@ const clock=new THREE.Clock();
 
 const heldGroup=new THREE.Group();
 camera.add(heldGroup);
-const armMaterial=new THREE.MeshLambertMaterial({color:0xd49a78});
-const sleeveMaterial=new THREE.MeshLambertMaterial({color:0x5b2ca0});
+const armMaterial=new THREE.MeshBasicMaterial({color:0xd49a78,depthTest:false,depthWrite:false});
+const sleeveMaterial=new THREE.MeshBasicMaterial({color:0x5b2ca0,depthTest:false,depthWrite:false});
 const rightArm=new THREE.Mesh(new THREE.BoxGeometry(.22,.72,.22),armMaterial);
 const leftArm=new THREE.Mesh(new THREE.BoxGeometry(.22,.72,.22),armMaterial);
 const sleeveR=new THREE.Mesh(new THREE.BoxGeometry(.24,.34,.24),sleeveMaterial);
@@ -107,8 +107,8 @@ const glintMaterial=new THREE.MeshBasicMaterial({map:glintTexture,transparent:tr
 const pickaxeGroup=new THREE.Group();
 function addPickaxe(){
   pickaxeGroup.clear();
-  const metal=new THREE.MeshLambertMaterial({color:0x3b3545});
-  const purple=new THREE.MeshLambertMaterial({color:0x8f45d9});
+  const metal=new THREE.MeshBasicMaterial({color:0x25212d,depthTest:false,depthWrite:false});
+  const purple=new THREE.MeshBasicMaterial({color:0xb45cff,depthTest:false,depthWrite:false});
   const shaft=new THREE.Mesh(new THREE.BoxGeometry(.075,.85,.075),metal);
   const head=new THREE.Mesh(new THREE.BoxGeometry(.62,.095,.105),purple);
   const hook=new THREE.Mesh(new THREE.BoxGeometry(.10,.34,.10),purple);
@@ -128,7 +128,7 @@ let customTotem='';
 const totemCanvas=document.createElement('canvas');totemCanvas.width=64;totemCanvas.height=64;
 const totemCtx=totemCanvas.getContext('2d');
 const totemTexture=new THREE.CanvasTexture(totemCanvas);totemTexture.colorSpace=THREE.SRGBColorSpace;totemTexture.magFilter=totemTexture.minFilter=THREE.NearestFilter;
-const totemMesh=new THREE.Mesh(new THREE.PlaneGeometry(.42,.62),new THREE.MeshBasicMaterial({map:totemTexture,transparent:true,depthWrite:false}));
+const totemMesh=new THREE.Mesh(new THREE.PlaneGeometry(.42,.62),new THREE.MeshBasicMaterial({map:totemTexture,transparent:true,depthWrite:false,depthTest:false}));
 totemMesh.position.set(-.52,-.42,-.78);totemMesh.rotation.set(.15,.15,-.08);heldItemGroup.add(totemMesh);
 let totemImage=null;
 function drawTotem(){
