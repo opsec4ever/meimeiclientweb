@@ -82,6 +82,8 @@ const clock=new THREE.Clock();
 
 const heldGroup=new THREE.Group();
 camera.add(heldGroup);
+heldGroup.renderOrder=9999;
+rightArm.renderOrder=10000;leftArm.renderOrder=10000;sleeveR.renderOrder=10000;sleeveL.renderOrder=10000;
 const armMaterial=new THREE.MeshBasicMaterial({color:0xd49a78,depthTest:false,depthWrite:false});
 const sleeveMaterial=new THREE.MeshBasicMaterial({color:0x5b2ca0,depthTest:false,depthWrite:false});
 const rightArm=new THREE.Mesh(new THREE.BoxGeometry(.22,.72,.22),armMaterial);
@@ -154,7 +156,7 @@ function updateHeldView(){
   const d=Number(debugState.armDistance||1);
   heldGroup.position.set(0,0,-.05*(d-1));
   heldGroup.scale.setScalar(d);
-  heldGroup.visible=debugState.showArms!==false&&!debugState.thirdPerson;
+  heldGroup.visible=debugState.showArms!==false;
 }
 function animateHeld(){
   const t=performance.now()*0.001;
@@ -226,7 +228,7 @@ document.addEventListener('keydown',e=>{
     if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}
     return;
   }
-  if(e.code==='KeyV'){debugState.thirdPerson=!debugState.thirdPerson;updateHeldView()}
+  if(e.code==='KeyV'){e.preventDefault();debugState.thirdPerson=!debugState.thirdPerson;updateHeldView();saveDebug()}
 },true);
 window.addEventListener('load',()=>{setTimeout(()=>{applyDebug();restorePositions();debugState.items.forEach(it=>{const e=document.createElement('div');e.className='custom-hud';e.id=it.id;e.textContent=it.text;e.style.color=it.color;e.style.left='10px';e.style.top='120px';document.body.appendChild(e);makeDraggable(e)});},0)});
 
@@ -528,3 +530,5 @@ if(mobile){
   renderer.domElement.addEventListener('touchend',e=>{for(const t of e.changedTouches)if(t.identifier===lookId)lookId=null},{passive:true});
   document.getElementById('play').addEventListener('touchend',e=>{e.preventDefault();gameStarted=true;document.getElementById('start').style.display='none'},{passive:false});
 }
+
+window.addEventListener('keydown',e=>{if(e.code==='KeyV'){e.preventDefault();debugState.thirdPerson=!debugState.thirdPerson;updateHeldView();saveDebug()}},true);
