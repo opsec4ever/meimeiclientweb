@@ -125,3 +125,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
 #scoreboard .money{color:#fff}
 #hud-cover{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:430px;height:82px;object-fit:fill;z-index:998;pointer-events:none}
 #fps,#cps{cursor:move;pointer-events:auto}
+
+#debug-panel input[type=file]{width:100%;font-size:10px}
+#debug-panel input[type=range]{width:100%}
+#survival-hud .offhand-slot{background:#3b3b3b url('https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png') center/28px 28px no-repeat!important;border:3px solid #171717!important;box-shadow:inset 2px 2px #777,inset -2px -2px #1d1d1d!important}
