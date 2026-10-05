@@ -117,7 +117,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
 #survival-hud .offhand-slot:before{display:none!important}
 
 
-#scoreboard{position:fixed;right:0;top:50%;transform:translateY(-50%);width:150px;padding:6px 8px;box-sizing:border-box;background:rgba(0,0,0,.48);color:#fff;font:12px 'Minecraftia',monospace;text-shadow:2px 2px 0 #000;z-index:70;pointer-events:auto;text-align:right}
+#scoreboard{position:fixed;right:0;top:50%;transform:translateY(-50%);width:150px;padding:6px 8px;box-sizing:border-box;background:transparent;color:#fff;font:12px 'Minecraftia',monospace;text-shadow:2px 2px 0 #000;z-index:70;pointer-events:auto;text-align:right}
 #scoreboard .score-title{display:block;color:#777;font-size:13px;line-height:15px;margin:0 0 4px;text-align:center;white-space:nowrap}
 #scoreboard .score-row{display:flex;align-items:center;justify-content:flex-start;height:20px;line-height:20px;white-space:nowrap}
 #scoreboard .score-icon{width:20px;text-align:left;font-family:Arial,sans-serif;font-weight:400;font-size:15px;line-height:20px;text-shadow:1px 1px 0 #000}
@@ -139,7 +139,7 @@ button:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #32165a}
 #debug-panel button{font:11px Minecraftia,monospace;padding:6px 8px;background:#20172b;color:#fff;border:1px solid #68439a;border-radius:5px}
 #debug-panel .dbg-row{display:flex;gap:6px;margin:7px 0}
 #debug-panel .dbg-help{opacity:.65;margin-top:10px}
-#scoreboard .score-title{background:rgba(0,0,0,.72);padding:2px 5px;border-radius:2px}
+#scoreboard .score-title{background:transparent;padding:0}
 #scoreboard .score-icon{font-family:Minecraftia,monospace!important;color:#fff!important}
 #scoreboard .score-value{margin-left:2px}
 #survival-hud .offhand-slot{display:block!important}
