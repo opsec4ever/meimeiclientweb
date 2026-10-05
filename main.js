@@ -119,12 +119,9 @@ document.getElementById('dbg-image').oninput=e=>{debugState.coverImage=e.target.
 document.getElementById('dbg-snap').oninput=e=>{debugState.snap=Math.max(1,+e.target.value||10);saveDebug()};
 document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
 document.getElementById('dbg-add').onclick=()=>addTextHud();
-let f3Held=false;
 document.addEventListener('keydown',e=>{
-  if(e.code==='F3'){f3Held=true;e.preventDefault();return}
-  if(f3Held&&e.code==='KeyG'){e.preventDefault();debugOpen=!debugOpen;debugPanel.classList.toggle('open',debugOpen);if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}}
+  if(e.code==='KeyG'){e.preventDefault();debugOpen=!debugOpen;debugPanel.classList.toggle('open',debugOpen);if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}}
 });
-document.addEventListener('keyup',e=>{if(e.code==='F3')f3Held=false});
 window.addEventListener('load',()=>{setTimeout(()=>{applyDebug();restorePositions();debugState.items.forEach(it=>{const e=document.createElement('div');e.className='custom-hud';e.id=it.id;e.textContent=it.text;e.style.color=it.color;e.style.left='10px';e.style.top='120px';document.body.appendChild(e);makeDraggable(e)});},0)});
 
 
