@@ -137,7 +137,7 @@ function drawTotem(){
   totemCtx.drawImage(totemImage,0,0,64,64);
   totemTexture.needsUpdate=true;
 }
-function {
+function applySkin(src){
   customSkin=src||'';
 }
 function applyTotem(src){
