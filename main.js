@@ -82,8 +82,6 @@ const clock=new THREE.Clock();
 
 const heldGroup=new THREE.Group();
 camera.add(heldGroup);
-heldGroup.renderOrder=9999;
-rightArm.renderOrder=10000;leftArm.renderOrder=10000;sleeveR.renderOrder=10000;sleeveL.renderOrder=10000;
 const armMaterial=new THREE.MeshBasicMaterial({color:0xd49a78,depthTest:false,depthWrite:false});
 const sleeveMaterial=new THREE.MeshBasicMaterial({color:0x5b2ca0,depthTest:false,depthWrite:false});
 const rightArm=new THREE.Mesh(new THREE.BoxGeometry(.22,.72,.22),armMaterial);
@@ -95,6 +93,8 @@ leftArm.position.set(-.42,-.45,-.68);leftArm.rotation.set(-.3,.2,-.18);
 sleeveR.position.set(.42,-.25,-.7);sleeveR.rotation.copy(rightArm.rotation);
 sleeveL.position.set(-.42,-.27,-.66);sleeveL.rotation.copy(leftArm.rotation);
 heldGroup.add(rightArm,leftArm,sleeveR,sleeveL);
+heldGroup.renderOrder=9999;
+rightArm.renderOrder=10000;leftArm.renderOrder=10000;sleeveR.renderOrder=10000;sleeveL.renderOrder=10000;
 
 const heldItemGroup=new THREE.Group();
 heldGroup.add(heldItemGroup);
