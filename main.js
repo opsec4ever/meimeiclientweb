@@ -124,6 +124,7 @@ function addPickaxe(){
 }
 addPickaxe();
 
+const totemDefault='';
 let customTotem='';
 const totemCanvas=document.createElement('canvas');totemCanvas.width=64;totemCanvas.height=64;
 const totemCtx=totemCanvas.getContext('2d');
