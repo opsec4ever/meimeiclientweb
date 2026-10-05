@@ -124,6 +124,7 @@ function addPickaxe(){
 }
 addPickaxe();
 
+let customTotem='';
 const totemCanvas=document.createElement('canvas');totemCanvas.width=64;totemCanvas.height=64;
 const totemCtx=totemCanvas.getContext('2d');
 const totemTexture=new THREE.CanvasTexture(totemCanvas);totemTexture.colorSpace=THREE.SRGBColorSpace;totemTexture.magFilter=totemTexture.minFilter=THREE.NearestFilter;
