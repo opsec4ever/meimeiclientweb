@@ -124,7 +124,6 @@ function addPickaxe(){
 }
 addPickaxe();
 
-var totemDefault='https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png';
 let customTotem='';
 const totemCanvas=document.createElement('canvas');totemCanvas.width=64;totemCanvas.height=64;
 const totemCtx=totemCanvas.getContext('2d');
@@ -141,10 +140,10 @@ function drawTotem(){
 function applyTotem(src){
   customTotem=src||'';
   const slot=document.querySelector('.offhand-slot');
-  if(slot)slot.style.backgroundImage='url("'+(src||totemDefault)+'")';
+  if(slot)slot.style.backgroundImage='url("'+(src||'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png')+'")';
   const im=new Image();
   im.onload=()=>{totemImage=im;drawTotem()};
-  im.src=src||totemDefault;
+  im.src=src||'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png';
 }
 applyTotem('');
 
