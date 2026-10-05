@@ -87,7 +87,7 @@ skinImage.src=defaultSkin;
 
 const heldGroup=new THREE.Group();
 camera.add(heldGroup);
-heldGroup.position.set(0,0,0);
+heldGroup.position.set(0,0,0);heldGroup.visible=true;
 
 const armMaterial=new THREE.MeshBasicMaterial({color:0xd49a78,depthTest:false,depthWrite:false,transparent:true});
 const sleeveMaterial=new THREE.MeshBasicMaterial({color:0x5b2ca0,depthTest:false,depthWrite:false});
@@ -101,24 +101,29 @@ sleeveR.position.set(.42,-.25,-.60);sleeveL.position.set(-.42,-.27,-.60);
 sleeveR.rotation.copy(rightArm.rotation);sleeveL.rotation.copy(leftArm.rotation);
 heldGroup.add(rightArm,leftArm,sleeveR,sleeveL);
 
-function makeSkinPatch(x,y,w,h,mirror=false){
-  const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+function makeSkinPatch(x,y,w,h,flip=false){
+  const cv=document.createElement('canvas');cv.width=w*8;cv.height=h*8;
   const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
-  cx.drawImage(skinImage,x,y,w,h,0,0,w,h);
+  cx.drawImage(skinImage,x,y,w,h,0,0,cv.width,cv.height);
   const tx=new THREE.CanvasTexture(cv);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.colorSpace=THREE.SRGBColorSpace;
   const mat=new THREE.MeshBasicMaterial({map:tx,transparent:true,side:THREE.DoubleSide,depthTest:false,depthWrite:false});
-  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(.26,.72),mat);
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(.30,.76),mat);
   mesh.frustumCulled=false;
-  if(mirror){mesh.scale.x=-1}
+  if(flip)mesh.scale.x=-1;
   return mesh;
 }
-skinImage.onload=()=>{
-  const ra=makeSkinPatch(44,20,4,12);
+function setupSkinArms(){
+  heldGroup.children.filter(o=>o.userData.skinArm).forEach(o=>heldGroup.remove(o));
+  const ra=makeSkinPatch(44,20,4,12,false);
   const la=makeSkinPatch(36,52,4,12,true);
-  ra.position.set(.42,-.43,-.78);la.position.set(-.42,-.45,-.78);
-  ra.rotation.set(-.35,-.2,.18);la.rotation.set(-.3,.2,-.18);
+  ra.userData.skinArm=la.userData.skinArm=true;
+  ra.position.set(.43,-.46,-.94);
+  la.position.set(-.43,-.47,-.94);
+  ra.rotation.z=.08;la.rotation.z=-.08;
   heldGroup.add(ra,la);
-};
+}
+skinImage.onload=setupSkinArms;
+if(skinImage.complete)setupSkinArms();
 
 const heldItemGroup=new THREE.Group();
 heldGroup.add(heldItemGroup);
@@ -138,12 +143,12 @@ function addPickaxe(){
   pickaxeGroup.clear();
   const metal=new THREE.MeshBasicMaterial({color:0x30283a,depthTest:false,depthWrite:false});
   const purple=new THREE.MeshBasicMaterial({color:0xb45cff,depthTest:false,depthWrite:false});
-  const shaft=new THREE.Mesh(new THREE.BoxGeometry(.07,.82,.07),metal);
-  const head=new THREE.Mesh(new THREE.BoxGeometry(.64,.10,.10),purple);
-  const hook=new THREE.Mesh(new THREE.BoxGeometry(.10,.34,.10),purple);
-  shaft.position.set(.47,-.47,-.82);shaft.rotation.z=-.22;
-  head.position.set(.47,-.16,-.82);head.rotation.z=-.22;
-  hook.position.set(.71,-.16,-.82);hook.rotation.z=-.95;
+  const shaft=new THREE.Mesh(new THREE.BoxGeometry(.09,.95,.09),metal);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(.72,.12,.12),purple);
+  const hook=new THREE.Mesh(new THREE.BoxGeometry(.12,.38,.12),purple);
+  shaft.position.set(.50,-.50,-.98);shaft.rotation.z=-.22;
+  head.position.set(.50,-.16,-.98);head.rotation.z=-.22;
+  hook.position.set(.74,-.16,-.98);hook.rotation.z=-.95;
   for(const m of [shaft,head,hook]){
     m.frustumCulled=false;
     pickaxeGroup.add(m);
@@ -160,10 +165,15 @@ const totemCtx=totemCanvas.getContext('2d');
 const totemTexture=new THREE.CanvasTexture(totemCanvas);totemTexture.colorSpace=THREE.SRGBColorSpace;totemTexture.magFilter=totemTexture.minFilter=THREE.NearestFilter;
 const totemMesh=new THREE.Mesh(new THREE.PlaneGeometry(.42,.62),new THREE.MeshBasicMaterial({map:totemTexture,transparent:true,depthWrite:false,depthTest:false,side:THREE.DoubleSide}));
 totemMesh.frustumCulled=false;
-totemMesh.position.set(-.52,-.42,-.82);totemMesh.rotation.set(.15,.15,-.08);heldItemGroup.add(totemMesh);
+totemMesh.position.set(-.52,-.45,-.98);totemMesh.rotation.set(.15,.15,-.08);heldItemGroup.add(totemMesh);
 let totemImage=null;
 function drawTotem(){if(!totemImage)return;totemCtx.clearRect(0,0,64,64);totemCtx.drawImage(totemImage,0,0,64,64);totemTexture.needsUpdate=true}
-function applySkin(src){customSkin=src||defaultSkin}
+function applySkin(src){
+  customSkin=src||defaultSkin;
+  skinImage.onload=setupSkinArms;
+  skinImage.src=customSkin;
+  if(skinImage.complete)setupSkinArms();
+}
 function applyTotem(src){
   customTotem=src||'';
   const fallback='https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png';
@@ -201,6 +211,7 @@ const debugPanel=document.createElement('div');debugPanel.id='debug-panel';debug
 document.body.appendChild(debugPanel);
 function saveDebug(){try{localStorage.setItem('meimei-debug',JSON.stringify(debugState))}catch{}}
 try{Object.assign(debugState,JSON.parse(localStorage.getItem('meimei-debug')||'{}'))}catch{}
+debugState.thirdPerson=false;
 setTimeout(()=>{applyTotem(debugState.totem);updateHeldView();const a=document.getElementById('dbg-arm'),k=document.getElementById('dbg-camera-key');if(a)a.value=debugState.armDistance||1;if(k)k.value=debugState.cameraKey||'V'},0);
 function snap(v){const n=debugState.snap||10;return Math.round(v/n)*n}
 function applyDebug(){
@@ -520,7 +531,9 @@ function initial(){
 renderer.domElement.addEventListener('click',()=>{if(!mobile&&!locked)renderer.domElement.requestPointerLock()});
 document.addEventListener('pointerlockchange',()=>locked=document.pointerLockElement===renderer.domElement);
 document.addEventListener('mousemove',e=>{if(!locked||!gameStarted)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-Math.PI/2+.01,Math.min(Math.PI/2-.01,pitch))});
-document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyR'&&gameStarted&&!inventoryOpen)placeRotation=(placeRotation+Math.PI/2)%(Math.PI*2);if(/^Digit[1-9]$/.test(e.code)){selectedSlot=Number(e.code.slice(5))-1;updateHotbar()}if(e.code==='KeyE'&&gameStarted){inventoryOpen=!inventoryOpen;document.getElementById('inventory').classList.toggle('open',inventoryOpen);if(inventoryOpen&&locked)document.exitPointerLock()}if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault()});
+document.addEventListener('keydown',e=>{
+  if(e.code==='KeyV'){e.preventDefault();debugState.thirdPerson=!debugState.thirdPerson;cameraUpdate();updateHeldView();saveDebug();return}
+  keys[e.code]=true;if(e.code==='KeyR'&&gameStarted&&!inventoryOpen)placeRotation=(placeRotation+Math.PI/2)%(Math.PI*2);if(/^Digit[1-9]$/.test(e.code)){selectedSlot=Number(e.code.slice(5))-1;updateHotbar()}if(e.code==='KeyE'&&gameStarted){inventoryOpen=!inventoryOpen;document.getElementById('inventory').classList.toggle('open',inventoryOpen);if(inventoryOpen&&locked)document.exitPointerLock()}if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault()});
 document.addEventListener('keyup',e=>keys[e.code]=false);
 document.addEventListener('wheel',e=>{if(!gameStarted||inventoryOpen)return;selectedSlot=(selectedSlot+(e.deltaY>0?1:8))%9;updateHotbar()},{passive:true});
 document.addEventListener('mousedown',e=>{if(e.button===0){const now=performance.now();clickTimes.push(now);clickTimes=clickTimes.filter(t=>now-t<1000);cps=clickTimes.length}});
@@ -560,4 +573,3 @@ if(mobile){
   document.getElementById('play').addEventListener('touchend',e=>{e.preventDefault();gameStarted=true;document.getElementById('start').style.display='none'},{passive:false});
 }
 
-window.addEventListener('keydown',e=>{if(e.code==='KeyV'){e.preventDefault();debugState.thirdPerson=!debugState.thirdPerson;updateHeldView();saveDebug()}},true);
