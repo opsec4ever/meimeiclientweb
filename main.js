@@ -486,7 +486,50 @@ document.getElementById('dbg-glint-bloom').onchange=e=>{debugState.glintBloom=e.
 document.getElementById('dbg-glint-bloom-strength').oninput=e=>{debugState.glintBloomStrength=+e.target.value;saveDebug()};
 document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
 document.getElementById('dbg-add').onclick=()=>addTextHud();
+const clientProfiles={
+  'Krypton Client':{accent:'#7ee7ff',title:'KRYPTON',categories:{
+    COMBAT:['KILL AURA','AUTO CRYSTAL','AUTO TOTEM','BED TRAPS','CRYSTAL NUKER','HITBOX','INSTANT BREAK','NO SLOW','REACH','TRIGGER BOT'],
+    MISC:['AUTO COLLECT','AUTO SELL','CHAT MACRO','CHEST STEAL','FAST PLACE','FREECAM','INV MOVE','ITEM SWAPPER','SPAM'],
+    MOVEMENT:['FLY','FULLBRIGHT','JESUS','LONG JUMP','NO FALL','SPEED','STEP','VELOCITY'],
+    RENDER:['BLOCK ESP','ENTITY ESP','FULLBRIGHT','NAME TAGS','ORE ESP','PLAYER ESP','STORAGE ESP','TRACERS'],
+    EXPLOIT:['PACKET FLY','PHASE','SELF DESTRUCT','SUSPICIOUS ESP'],
+    CLIENT:['CHAT MACRO','DISCORD PRESENCE','FRIENDS','HUD','MUSIC HUD'],
+    SEARCH:[]
+  }},
+  'Mei Mei Client':{accent:'#b45cff',title:'MEI MEI',categories:{COMBAT:['CRITICALS','HITBOX','TARGET HUD'],MISC:['AUTO SELL','CHEST STEAL','FREECAM'],MOVEMENT:['SPEED','SPRINT','STEP'],RENDER:['BLOCK ESP','FULLBRIGHT','PLAYER ESP','TRACERS'],CLIENT:['HUD','FRIENDS','RADIO'],SEARCH:[]}},
+  'Lunar Client':{accent:'#55aaff',title:'LUNAR',categories:{COMBAT:['COMBO','REACH'],MISC:['CPS','KEYSTROKES'],MOVEMENT:['SPRINT','TOGGLE SPRINT'],RENDER:['FULLBRIGHT','PLAYER ESP'],CLIENT:['HUD','WAYPOINTS'],SEARCH:[]}},
+  'Feather Client':{accent:'#f0a34a',title:'FEATHER',categories:{COMBAT:['COMBO','HITBOX'],MISC:['CPS','CHAT'],MOVEMENT:['SPEED','SPRINT'],RENDER:['FULLBRIGHT','TRACERS'],CLIENT:['HUD','COSMETICS'],SEARCH:[]}},
+  'Badlion Client':{accent:'#e84f63',title:'BADLION',categories:{COMBAT:['COMBO','HITBOX'],MISC:['CPS','CHAT'],MOVEMENT:['SPRINT','TOGGLE SPRINT'],RENDER:['FULLBRIGHT','PLAYER ESP'],CLIENT:['HUD','COSMETICS'],SEARCH:[]}}
+};
+let clientMenu=document.getElementById('client-menu');
+function buildClientMenu(){
+  if(!clientMenu){
+    clientMenu=document.createElement('div');
+    clientMenu.id='client-menu';
+    document.body.appendChild(clientMenu);
+  }
+  const profile=clientProfiles[debugState.clientProfile]||clientProfiles['Krypton Client'];
+  clientMenu.style.setProperty('--client-accent',profile.accent);
+  clientMenu.innerHTML='<div class="cm-head"><span class="cm-logo">'+profile.title+'</span><span class="cm-close">RIGHT SHIFT</span></div><div class="cm-grid">'+Object.entries(profile.categories).map(([cat,mods])=>'<section class="cm-col"><div class="cm-cat">'+cat+'</div>'+(cat==='SEARCH'?'<input class="cm-search" placeholder="SEARCH MODULES">':'')+mods.map(m=>'<button class="cm-mod" data-module="'+m+'"><span>'+m+'</span><i></i></button>').join('')+'</section>').join('')+'</div>';
+  clientMenu.querySelector('.cm-close').onclick=()=>clientMenu.classList.remove('open');
+  clientMenu.querySelectorAll('.cm-mod').forEach(b=>b.onclick=()=>b.classList.toggle('enabled'));
+  const search=clientMenu.querySelector('.cm-search');
+  if(search)search.oninput=()=>{const q=search.value.toLowerCase();clientMenu.querySelectorAll('.cm-mod').forEach(b=>b.style.display=b.dataset.module.toLowerCase().includes(q)?'flex':'none')};
+}
+function toggleClientMenu(){
+  buildClientMenu();
+  clientMenu.classList.toggle('open');
+  if(clientMenu.classList.contains('open')&&locked)document.exitPointerLock();
+}
+buildClientMenu();
+
 document.addEventListener('keydown',e=>{
+  if(e.code==='ShiftRight'){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    toggleClientMenu();
+    return;
+  }
   if(e.code==='KeyG'){
     e.preventDefault();
     e.stopImmediatePropagation();
