@@ -419,7 +419,20 @@ const debugPanel=document.createElement('div');debugPanel.id='debug-panel';debug
 <label>arm distance <input id="dbg-arm" type="range" min="0.4" max="2.2" step="0.05" value="1"></label>
 <label>camera keybind <input id="dbg-camera-key" maxlength="1" value="V"></label>
 <label>skin <input id="dbg-skin" type="file" accept="image/png,image/jpeg,image/webp"></label>
-<label>custom totem <input id="dbg-totem" type="file" accept="image/png,image/jpeg,image/webp"></label>
+<label>custom totem <input id="dbg-totem" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+<label>client chooser<select id="dbg-client"><option>Krypton Client</option><option>Mei Mei Client</option><option>Lunar Client</option><option>Feather Client</option><option>Badlion Client</option></select></label>
+<div class="dbg-glint"><div class="dbg-section">CUSTOM GLINT</div>
+<label><input id="dbg-glint-enabled" type="checkbox" checked> enable custom glint</label>
+<label>glint mode<select id="dbg-glint-mode"><option value="static">static</option><option value="rainbow">rainbow</option><option value="duo">duo-tone</option></select></label>
+<label>color<input id="dbg-glint-color" type="color" value="#b45cff"></label>
+<label>second color<input id="dbg-glint-color2" type="color" value="#ffffff"></label>
+<label>speed<input id="dbg-glint-speed" type="range" min="1" max="100" value="35"></label>
+<label>strength<input id="dbg-glint-strength" type="range" min="0" max="100" value="75"></label>
+<label>scale<input id="dbg-glint-scale" type="range" min=".25" max="4" step=".05" value="1"></label>
+<label>angle<input id="dbg-glint-angle" type="range" min="-180" max="180" value="45"></label>
+<label><input id="dbg-glint-bloom" type="checkbox"> glint bloom</label>
+<label>bloom strength<input id="dbg-glint-bloom-strength" type="range" min="0" max="100" value="35"></label>
+</div>
 <div class="dbg-row"><button id="dbg-hide">hide bottom hud</button><button id="dbg-arms">hide arms</button></div>
 <div class="dbg-row"><button id="dbg-camera">third person</button><button id="dbg-add">add text hud</button></div>
 <label>snap <input id="dbg-snap" type="number" min="1" max="50" value="10"></label>
@@ -456,10 +469,21 @@ document.getElementById('dbg-image').oninput=e=>{debugState.coverImage=e.target.
 document.getElementById('dbg-snap').oninput=e=>{debugState.snap=Math.max(1,+e.target.value||10);saveDebug()};
 document.getElementById('dbg-arm').oninput=e=>{debugState.armDistance=+e.target.value;updateHeldView();saveDebug()};
 document.getElementById('dbg-arms').onclick=()=>{debugState.showArms=!debugState.showArms;document.getElementById('dbg-arms').textContent=debugState.showArms?'hide arms':'show arms';updateHeldView();saveDebug()};
-document.getElementById('dbg-camera').onclick=()=>{debugState.thirdPerson=!debugState.thirdPerson;document.getElementById('dbg-camera').textContent=debugState.thirdPerson?'first person':'third person';updateHeldView();cameraUpdate();saveDebug()};
+document.getElementById('dbg-camera').onclick=()=>{debugState.cameraMode=(Number(debugState.cameraMode||0)+1)%3;document.getElementById('dbg-camera').textContent=['first person','second person','third person'][debugState.cameraMode];updateHeldView();cameraUpdate();saveDebug()};
 document.getElementById('dbg-camera-key').oninput=e=>{debugState.cameraKey=(e.target.value||'V').slice(0,1).toUpperCase();saveDebug()};
 document.getElementById('dbg-skin').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{debugState.skin=String(r.result||'');applySkin(debugState.skin);saveDebug()};r.readAsDataURL(f)};
 document.getElementById('dbg-totem').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{debugState.totem=r.result;applyTotem(r.result);saveDebug()};r.readAsDataURL(f)};
+document.getElementById('dbg-client').onchange=e=>{debugState.clientProfile=e.target.value;saveDebug();buildClientMenu()};
+document.getElementById('dbg-glint-enabled').onchange=e=>{debugState.glintEnabled=e.target.checked;updateGlintVisual();saveDebug()};
+document.getElementById('dbg-glint-mode').onchange=e=>{debugState.glintMode=e.target.value;updateGlintVisual();saveDebug()};
+document.getElementById('dbg-glint-color').oninput=e=>{debugState.glintColor=e.target.value;updateGlintVisual();saveDebug()};
+document.getElementById('dbg-glint-color2').oninput=e=>{debugState.glintColor2=e.target.value;updateGlintVisual();saveDebug()};
+document.getElementById('dbg-glint-speed').oninput=e=>{debugState.glintSpeed=+e.target.value;updateGlintVisual();saveDebug()};
+document.getElementById('dbg-glint-strength').oninput=e=>{debugState.glintStrength=+e.target.value;updateGlintVisual();saveDebug()};
+document.getElementById('dbg-glint-scale').oninput=e=>{debugState.glintScale=+e.target.value;updateGlintVisual();saveDebug()};
+document.getElementById('dbg-glint-angle').oninput=e=>{debugState.glintAngle=+e.target.value;updateGlintVisual();saveDebug()};
+document.getElementById('dbg-glint-bloom').onchange=e=>{debugState.glintBloom=e.target.checked;saveDebug()};
+document.getElementById('dbg-glint-bloom-strength').oninput=e=>{debugState.glintBloomStrength=+e.target.value;saveDebug()};
 document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
 document.getElementById('dbg-add').onclick=()=>addTextHud();
 document.addEventListener('keydown',e=>{
