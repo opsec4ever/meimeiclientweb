@@ -114,7 +114,7 @@ function skinMat(x,y,w,h,transparent=false,world=false){
     map:skinCrop(x,y,w,h,transparent),
     transparent,
     alphaTest:transparent?.01:0,
-    side:world?THREE.FrontSide:THREE.DoubleSide,
+    side:THREE.FrontSide,
     depthTest:world,
     depthWrite:world
   });
@@ -348,6 +348,8 @@ function updateHeldView(){
   const d=Math.max(.5,Number(debugState.armDistance||1));
   heldGroup.scale.setScalar(d);
   heldGroup.visible=debugState.cameraMode===0&&debugState.showArms!==false;
+  heldGroup.renderOrder=10;
+  heldGroup.traverse(o=>{if(o.isMesh){o.renderOrder=10;if(o.material){const m=Array.isArray(o.material)?o.material:[o.material];m.forEach(x=>{x.depthTest=false;x.depthWrite=false})}}});
 }
 function animateHeld(dt){
   const t=performance.now()*.001;
