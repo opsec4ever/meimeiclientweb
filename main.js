@@ -186,7 +186,7 @@ function clearSkinGroup(group){
 }
 
 function setupSkinArms(){
-  clearSkinGroup(heldGroup);
+  heldGroup.children.filter(o=>o.userData&&o.userData.skinArm).forEach(o=>{heldGroup.remove(o);disposeSkinObject(o)});
   const rg=new THREE.Mesh(new THREE.BoxGeometry(.30,.90,.30),boxMats(skinRegions.rightArm));
   const lg=new THREE.Mesh(new THREE.BoxGeometry(.30,.90,.30),boxMats(skinRegions.leftArm));
   const ro=new THREE.Mesh(new THREE.BoxGeometry(.315,.915,.315),boxMats(overlayRegions.rightArm,true));
