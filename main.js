@@ -109,24 +109,24 @@ function skinCrop(x,y,w,h,transparent=false){
   tex.flipY=true;
   return tex;
 }
-function skinMat(x,y,w,h,transparent=false){
+function skinMat(x,y,w,h,transparent=false,world=false){
   return new THREE.MeshBasicMaterial({
     map:skinCrop(x,y,w,h,transparent),
     transparent,
     alphaTest:transparent?.01:0,
-    side:THREE.DoubleSide,
-    depthTest:false,
-    depthWrite:false
+    side:world?THREE.FrontSide:THREE.DoubleSide,
+    depthTest:world,
+    depthWrite:world
   });
 }
-function boxMats(r,transparent=false){
+function boxMats(r,transparent=false,world=false){
   return [
-    skinMat(...r.right,transparent),
-    skinMat(...r.left,transparent),
-    skinMat(...r.top,transparent),
-    skinMat(...r.bottom,transparent),
-    skinMat(...r.front,transparent),
-    skinMat(...r.back,transparent)
+    skinMat(...r.right,transparent,world),
+    skinMat(...r.left,transparent,world),
+    skinMat(...r.top,transparent,world),
+    skinMat(...r.bottom,transparent,world),
+    skinMat(...r.front,transparent,world),
+    skinMat(...r.back,transparent,world)
   ];
 }
 const skinRegions={
@@ -187,8 +187,8 @@ function clearSkinGroup(group){
 
 function setupSkinArms(){
   heldGroup.children.filter(o=>o.userData&&o.userData.skinArm).forEach(o=>{heldGroup.remove(o);disposeSkinObject(o)});
-  const rg=new THREE.Mesh(new THREE.BoxGeometry(.30,.90,.30),boxMats(skinRegions.rightArm));
-  const lg=new THREE.Mesh(new THREE.BoxGeometry(.30,.90,.30),boxMats(skinRegions.leftArm));
+  const rg=new THREE.Mesh(new THREE.BoxGeometry(.30,.90,.30),boxMats(skinRegions.rightArm,false,true));
+  const lg=new THREE.Mesh(new THREE.BoxGeometry(.30,.90,.30),boxMats(skinRegions.leftArm,false,true));
   const ro=new THREE.Mesh(new THREE.BoxGeometry(.315,.915,.315),boxMats(overlayRegions.rightArm,true));
   const lo=new THREE.Mesh(new THREE.BoxGeometry(.315,.915,.315),boxMats(overlayRegions.leftArm,true));
   for(const o of [rg,lg,ro,lo])o.userData.skinArm=true;
@@ -213,12 +213,12 @@ function addPlayerPart(group,geometry,mats,pos){
 
 function setupPlayerModel(){
   clearSkinGroup(playerModel);
-  const head=addPlayerPart(playerModel,new THREE.BoxGeometry(.5,.5,.5),boxMats(skinRegions.head),new THREE.Vector3(0,1.55,0));
-  const body=addPlayerPart(playerModel,new THREE.BoxGeometry(.5,.75,.25),boxMats(skinRegions.body),new THREE.Vector3(0,1.025,0));
+  const head=addPlayerPart(playerModel,new THREE.BoxGeometry(.5,.5,.5),boxMats(skinRegions.head,false,true),new THREE.Vector3(0,1.55,0));
+  const body=addPlayerPart(playerModel,new THREE.BoxGeometry(.5,.75,.25),boxMats(skinRegions.body,false,true),new THREE.Vector3(0,1.025,0));
   const ra=addPlayerPart(playerModel,new THREE.BoxGeometry(.25,.75,.25),boxMats(skinRegions.rightArm),new THREE.Vector3(.375,1.025,0));
   const la=addPlayerPart(playerModel,new THREE.BoxGeometry(.25,.75,.25),boxMats(skinRegions.leftArm),new THREE.Vector3(-.375,1.025,0));
-  const rl=addPlayerPart(playerModel,new THREE.BoxGeometry(.25,.75,.25),boxMats(skinRegions.rightLeg),new THREE.Vector3(.125,.375,0));
-  const ll=addPlayerPart(playerModel,new THREE.BoxGeometry(.25,.75,.25),boxMats(skinRegions.leftLeg),new THREE.Vector3(-.125,.375,0));
+  const rl=addPlayerPart(playerModel,new THREE.BoxGeometry(.25,.75,.25),boxMats(skinRegions.rightLeg,false,true),new THREE.Vector3(.125,.375,0));
+  const ll=addPlayerPart(playerModel,new THREE.BoxGeometry(.25,.75,.25),boxMats(skinRegions.leftLeg,false,true),new THREE.Vector3(-.125,.375,0));
   const parts=[head,body,ra,la,rl,ll];
   const overlayScale=[1.055,1.045,1.055,1.055,1.055,1.055];
   const regs=[overlayRegions.head,overlayRegions.body,overlayRegions.rightArm,overlayRegions.leftArm,overlayRegions.rightLeg,overlayRegions.leftLeg];
@@ -232,7 +232,7 @@ function setupPlayerModel(){
   ];
   const poses=parts.map(p=>p.position.clone());
   for(let i=0;i<geoms.length;i++){
-    const o=addPlayerPart(playerModel,geoms[i],boxMats(regs[i],true),poses[i]);
+    const o=addPlayerPart(playerModel,geoms[i],boxMats(regs[i],true,true),poses[i]);
     o.scale.setScalar(overlayScale[i]);
     o.renderOrder=2;
   }
