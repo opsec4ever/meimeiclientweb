@@ -269,8 +269,8 @@ function makeGlintTexture(){
   const cv=document.createElement('canvas');cv.width=32;cv.height=32;
   const x=cv.getContext('2d');const g=x.createLinearGradient(0,0,32,32);
   g.addColorStop(0,'rgba(255,255,255,0)');
-  g.addColorStop(.45,'rgba(255,255,255,.7)');
-  g.addColorStop(.55,'rgba(180,80,255,.95)');
+  g.addColorStop(.45,'rgba(255,255,255,.82)');
+  g.addColorStop(.55,'rgba(255,255,255,1)');
   g.addColorStop(1,'rgba(255,255,255,0)');
   x.fillStyle=g;x.fillRect(0,0,32,32);
   const t=new THREE.CanvasTexture(cv);
@@ -279,7 +279,9 @@ function makeGlintTexture(){
   return t;
 }
 const glintTexture=makeGlintTexture();
-const glintMaterial=new THREE.MeshBasicMaterial({map:glintTexture,transparent:true,opacity:.75,depthWrite:false,depthTest:false});
+glintTexture.center.set(.5,.5);
+const glintMaterial=new THREE.MeshBasicMaterial({map:glintTexture,transparent:true,opacity:.75,depthWrite:false,depthTest:false,color:0xb45cff});
+const glintOverlays=[];
 const pickaxeGroup=new THREE.Group();
 function addPickaxe(){
   pickaxeGroup.clear();
@@ -300,6 +302,8 @@ function addPickaxe(){
     overlay.rotation.copy(m.rotation);
     overlay.scale.setScalar(1.015);
     overlay.frustumCulled=false;
+    overlay.userData.glint=true;
+    glintOverlays.push(overlay);
     pickaxeGroup.add(overlay);
   }
   heldItemGroup.add(pickaxeGroup);
@@ -371,8 +375,39 @@ function animateHeld(dt){
     if(p[10])p[10].rotation.x=-swing;
     if(p[11])p[11].rotation.x=swing;
   }
-  glintTexture.offset.x=(t*.35)%1;
-  glintTexture.offset.y=(t*.18)%1;
+  updateGlintVisual(t);
+}
+function hexColor(v,fallback=0xb45cff){
+  const s=String(v||'').trim().replace('#','');
+  return /^[0-9a-fA-F]{6}$/.test(s)?parseInt(s,16):fallback;
+}
+function updateGlintVisual(t=performance.now()*.001){
+  const enabled=debugState.glintEnabled!==false;
+  const mode=debugState.glintMode||'static';
+  const c1=new THREE.Color(hexColor(debugState.glintColor));
+  const c2=new THREE.Color(hexColor(debugState.glintColor2,0xffffff));
+  let color=c1;
+  if(mode==='rainbow')color=new THREE.Color().setHSL((t*(Number(debugState.glintSpeed||35)/100))%1,.85,.62);
+  if(mode==='duo'){
+    const mix=(Math.sin(t*(Number(debugState.glintSpeed||35)/12))+1)/2;
+    color=c1.clone().lerp(c2,mix);
+  }
+  const strength=Math.max(0,Math.min(100,Number(debugState.glintStrength??75)));
+  const scale=Math.max(.25,Math.min(4,Number(debugState.glintScale??1)));
+  glintTexture.repeat.set(scale,scale);
+  glintTexture.rotation=Number(debugState.glintAngle??45)*Math.PI/180;
+  glintTexture.offset.x=(t*(Number(debugState.glintSpeed||35)/100))%1;
+  glintTexture.offset.y=(t*(Number(debugState.glintSpeed||35)/180))%1;
+  for(const o of glintOverlays){
+    if(!o?.material)continue;
+    o.visible=enabled;
+    o.material.color.copy(color);
+    o.material.opacity=strength/100;
+    o.material.needsUpdate=true;
+  }
+  glintMaterial.color.copy(color);
+  glintMaterial.opacity=strength/100;
+  glintMaterial.needsUpdate=true;
 }
 const debugState={scoreTitle:'MeiMei',balance:'100k',hideBottom:false,coverImage:'',snap:10,items:[],armDistance:1,showArms:true,cameraMode:0,cameraKey:'V',skin:'',totem:'',clientProfile:'Krypton Client',glintEnabled:true,glintColor:'#b45cff',glintColor2:'#ffffff',glintMode:'static',glintSpeed:35,glintStrength:75,glintScale:1,glintAngle:45,glintBloom:false,glintBloomStrength:35};
 let debugOpen=false;
