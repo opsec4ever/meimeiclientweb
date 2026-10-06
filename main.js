@@ -347,7 +347,7 @@ applyTotem('');
 function updateHeldView(){
   const d=Math.max(.5,Number(debugState.armDistance||1));
   heldGroup.scale.setScalar(d);
-  heldGroup.visible=!debugState.thirdPerson&&debugState.showArms!==false;
+  heldGroup.visible=debugState.cameraMode===0&&debugState.showArms!==false;
 }
 function animateHeld(){
   const t=performance.now()*.001,bob=Math.sin(t*5)*.012;
@@ -356,7 +356,7 @@ function animateHeld(){
   glintTexture.offset.x=(t*.35)%1;
   glintTexture.offset.y=(t*.18)%1;
 }
-const debugState={scoreTitle:'MeiMei',balance:'100k',hideBottom:false,coverImage:'',snap:10,items:[],armDistance:1,showArms:true,thirdPerson:false,cameraKey:'V',skin:'',totem:''};
+const debugState={scoreTitle:'MeiMei',balance:'100k',hideBottom:false,coverImage:'',snap:10,items:[],armDistance:1,showArms:true,cameraMode:0,cameraKey:'V',skin:'',totem:''};
 let debugOpen=false;
 const debugPanel=document.createElement('div');debugPanel.id='debug-panel';debugPanel.innerHTML=`
 <div class="dbg-box"><div class="dbg-title">HUD DEBUG</div>
@@ -374,7 +374,7 @@ const debugPanel=document.createElement('div');debugPanel.id='debug-panel';debug
 document.body.appendChild(debugPanel);
 function saveDebug(){try{localStorage.setItem('meimei-debug',JSON.stringify(debugState))}catch{}}
 try{Object.assign(debugState,JSON.parse(localStorage.getItem('meimei-debug')||'{}'))}catch{}
-debugState.thirdPerson=false;
+debugState.cameraMode=0;
 setTimeout(()=>{applySkin(debugState.skin||defaultSkin);applyTotem(debugState.totem);updateHeldView();const a=document.getElementById('dbg-arm'),k=document.getElementById('dbg-camera-key');if(a)a.value=debugState.armDistance||1;if(k)k.value=debugState.cameraKey||'V'},0);
 function snap(v){const n=debugState.snap||10;return Math.round(v/n)*n}
 function applyDebug(){
@@ -588,22 +588,31 @@ function move(dt){
   if(player.position.y<WORLD_MIN-10){player.position.set(0,getHeight(0,0)+3,0);player.velocity.set(0,0,0)}
 }
 function cameraUpdate(){
-  if(debugState.thirdPerson){
-    heldGroup.visible=false;
-    playerModel.visible=true;
-    playerModel.position.copy(player.position);
-    playerModel.rotation.y=yaw+Math.PI;
-    const back=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
-    camera.position.copy(player.position).add(new THREE.Vector3(0,1.0,0)).addScaledVector(back,4);
-    camera.lookAt(player.position.x,player.position.y+1.0,player.position.z);
-  }else{
+  const mode=Number(debugState.cameraMode||0);
+  playerModel.position.copy(player.position);
+  playerModel.rotation.y=yaw+Math.PI;
+  if(mode===0){
     playerModel.visible=false;
     camera.position.set(player.position.x,player.position.y+1.62,player.position.z);
     camera.rotation.order='YXZ';
     camera.rotation.y=yaw;
     camera.rotation.x=pitch;
     heldGroup.visible=debugState.showArms!==false;
+    return;
   }
+  heldGroup.visible=false;
+  playerModel.visible=true;
+  const look=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
+  const focus=player.position.clone().add(new THREE.Vector3(0,1.05,0));
+  if(mode===1){
+    camera.position.copy(focus).addScaledVector(look,-4);
+    camera.lookAt(focus);
+  }else{
+    camera.position.copy(focus).addScaledVector(look,4);
+    camera.lookAt(focus);
+  }
+  camera.near=.05;
+  camera.far=300;
 }
 let breaking=false,breakTarget=null,breakStart=0,breakDuration=0,breakStage=-1;
 const destroyTextures=Array.from({length:10},(_,i)=>loader.load(`https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/block/destroy_stage_${i}.png`));
@@ -699,7 +708,7 @@ renderer.domElement.addEventListener('click',()=>{if(!mobile&&!locked)renderer.d
 document.addEventListener('pointerlockchange',()=>locked=document.pointerLockElement===renderer.domElement);
 document.addEventListener('mousemove',e=>{if(!locked||!gameStarted)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-Math.PI/2+.01,Math.min(Math.PI/2-.01,pitch))});
 document.addEventListener('keydown',e=>{
-  if(e.code==='KeyV'){e.preventDefault();debugState.thirdPerson=!debugState.thirdPerson;cameraUpdate();updateHeldView();saveDebug();return}
+  if(e.code==='KeyV'){e.preventDefault();debugState.cameraMode=(Number(debugState.cameraMode||0)+1)%3;cameraUpdate();updateHeldView();saveDebug();return}
   keys[e.code]=true;if(e.code==='KeyR'&&gameStarted&&!inventoryOpen)placeRotation=(placeRotation+Math.PI/2)%(Math.PI*2);if(/^Digit[1-9]$/.test(e.code)){selectedSlot=Number(e.code.slice(5))-1;updateHotbar()}if(e.code==='KeyE'&&gameStarted){inventoryOpen=!inventoryOpen;document.getElementById('inventory').classList.toggle('open',inventoryOpen);if(inventoryOpen&&locked)document.exitPointerLock()}if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault()});
 document.addEventListener('keyup',e=>keys[e.code]=false);
 document.addEventListener('wheel',e=>{if(!gameStarted||inventoryOpen)return;selectedSlot=(selectedSlot+(e.deltaY>0?1:8))%9;updateHotbar()},{passive:true});
