@@ -74,7 +74,7 @@ let placeRotation=0;
 const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D(),broken=new Set(),placed=new Map(),drops=[];
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
-let yaw=0,pitch=0,locked=false,gameStarted=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0,selectedSlot=0,cps=0,clickTimes=[],inventoryOpen=false;
+let yaw=0,pitch=0,locked=false,gameStarted=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0,selectedSlot=0,cps=0,clickTimes=[],inventoryOpen=false,walkTime=0;
 const inventoryCounts=new Array(9).fill(0);
 const HOTBAR_ICONS=['grass_block_top','dirt','stone','sand','oak_log','oak_leaves','deepslate','stone','bedrock'].map(n=>ASSET_BASE+n+'.png');
 
@@ -349,10 +349,26 @@ function updateHeldView(){
   heldGroup.scale.setScalar(d);
   heldGroup.visible=debugState.cameraMode===0&&debugState.showArms!==false;
 }
-function animateHeld(){
-  const t=performance.now()*.001,bob=Math.sin(t*5)*.012;
+function animateHeld(dt){
+  const t=performance.now()*.001;
+  const moving=gameStarted&&!inventoryOpen&&player.onGround&&Math.hypot(player.velocity.x,player.velocity.z)>.15;
+  const speed=Math.hypot(player.velocity.x,player.velocity.z);
+  if(moving)walkTime+=(speed>5.5?11:8)*dt;
+  const bob=moving?Math.abs(Math.sin(walkTime))*.035:0;
   pickaxeGroup.position.y=bob;
   totemMesh.position.y=-.42+bob*.7;
+  if(playerModel.visible){
+    const swing=moving?Math.sin(walkTime)*.5:0;
+    const p=playerModel.children;
+    if(p[2])p[2].rotation.x=swing;
+    if(p[3])p[3].rotation.x=-swing;
+    if(p[4])p[4].rotation.x=-swing;
+    if(p[5])p[5].rotation.x=swing;
+    if(p[8])p[8].rotation.x=swing;
+    if(p[9])p[9].rotation.x=-swing;
+    if(p[10])p[10].rotation.x=-swing;
+    if(p[11])p[11].rotation.x=swing;
+  }
   glintTexture.offset.x=(t*.35)%1;
   glintTexture.offset.y=(t*.18)%1;
 }
@@ -574,10 +590,23 @@ function collides(p){
   return false;
 }
 function move(dt){
-  const speed=keys.ShiftLeft?7:4,d=new THREE.Vector3();
+  const sprint=keys.ShiftLeft||keys.ShiftRight;
+  const speed=sprint?7:4,d=new THREE.Vector3();
   if(keys.KeyW)d.z-=1;if(keys.KeyS)d.z+=1;if(keys.KeyA)d.x-=1;if(keys.KeyD)d.x+=1;
-  if(d.lengthSq()){d.normalize();const sin=Math.sin(yaw),cos=Math.cos(yaw),x=d.x*cos+d.z*sin,z=-d.x*sin+d.z*cos;player.velocity.x=x*speed;player.velocity.z=z*speed}
-  else{player.velocity.x*=.75;player.velocity.z*=.75}
+  if(d.lengthSq()){
+    d.normalize();
+    const sin=Math.sin(yaw),cos=Math.cos(yaw),x=d.x*cos+d.z*sin,z=-d.x*sin+d.z*cos;
+    const accel=player.onGround?(sprint?28:22):10;
+    player.velocity.x+=x*accel*dt;
+    player.velocity.z+=z*accel*dt;
+    const max=speed;
+    const hs=Math.hypot(player.velocity.x,player.velocity.z);
+    if(hs>max){player.velocity.x=player.velocity.x/hs*max;player.velocity.z=player.velocity.z/hs*max}
+  }else{
+    const drag=player.onGround?.72:.92;
+    player.velocity.x*=Math.pow(drag,dt*20);
+    player.velocity.z*=Math.pow(drag,dt*20);
+  }
   player.velocity.y-=25*dt;
   if(keys.Space&&player.onGround){player.velocity.y=8;player.onGround=false}
   const old=player.position.clone();
@@ -719,7 +748,7 @@ function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),.05);
   if(gameStarted&&!inventoryOpen)move(dt);for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.age+=dt;d.velocity.y-=14*dt;d.mesh.position.addScaledVector(d.velocity,dt);d.mesh.rotation.x+=dt*2;d.mesh.rotation.y+=dt*3;const gy=getHeight(Math.floor(d.mesh.position.x),Math.floor(d.mesh.position.z))+.25;if(d.mesh.position.y<gy){d.mesh.position.y=gy;d.velocity.y*=-.35;d.velocity.x*=.8;d.velocity.z*=.8}const dx=player.position.x-d.mesh.position.x,dy=player.position.y+.7-d.mesh.position.y,dz=player.position.z-d.mesh.position.z,dist=Math.hypot(dx,dy,dz);if(dist<2.2){const f=Math.min(8,3+5/(dist+.25));d.velocity.x+=dx*f*dt;d.velocity.y+=dy*f*dt;d.velocity.z+=dz*f*dt}if(d.age>20){scene.remove(d.mesh);drops.splice(i,1)}else if(dist<.55){if(addToInventory(d.type)){scene.remove(d.mesh);drops.splice(i,1)}}}if(breaking){const t=rayBlock();if(!t||t.x!==breakTarget.x||t.y!==breakTarget.y||t.z!==breakTarget.z)stopBreaking();else{const p=(performance.now()-breakStart)/breakDuration,stage=Math.min(9,Math.floor(p*10));if(stage!==breakStage){breakStage=stage;setBreakStage(stage,breakTarget)}if(p>=1)finishBreaking(t)}}
-  cameraUpdate();animateHeld();hud();chunkTimer+=dt;
+  cameraUpdate();animateHeld(dt);hud();chunkTimer+=dt;
   if(chunkTimer>.35){updateChunks();chunkTimer=0}
   renderer.render(scene,camera);
 }
