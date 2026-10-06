@@ -486,38 +486,39 @@ document.getElementById('dbg-glint-bloom').onchange=e=>{debugState.glintBloom=e.
 document.getElementById('dbg-glint-bloom-strength').oninput=e=>{debugState.glintBloomStrength=+e.target.value;saveDebug()};
 document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
 document.getElementById('dbg-add').onclick=()=>addTextHud();
+const MCITEM='https://blockrender.dev/texture/';
 const clientProfiles={
   'Krypton Client':{
-    accent:'#68d7ff',
-    title:'KRYPTON+',
-    categories:{
-      '⚔ COMBAT':['AIM ASSIST','ANCHOR MACRO','AUTO DOUBLE HAND','AUTO CRYSTAL','AUTO HIT CRYSTAL','AUTO INV TOTEM','AUTO JUMP RESET','AUTO TOTEM','CRYSTAL OPTIMIZER','DOUBLE ANCHOR','ELYTRA SWAP','HITBOX','HOVER TOTEM','TOTEM OFFHAND','MACE SWAP','NO HIT DELAY','SHIELD BREAKER','STATIC HITBOXES','TRIGGER BOT','MACE BOMBER'],
-      '▰ MISC':['AUTO CLICKER','AUTO EAT','AUTO FIREWORK','AUTO LOG','AUTO LOOT','AUTO MINE','AUTO TOOL','AUTO TPR','CORD SNAPPER','ELYTRA GLIDE','FAST PLACE','FREECAM','KEY PEARL','KEY WIND CHARGE','NAME PROTECT','SPRINT','SKIN PROTECT','AUTO RECONNECT'],
-      '◆ DONUT':['ANTI TRAP','AUCTION SNIPER','AUTO SELL','AUTO SPAWNER SELL','ITEM DROPPER','NETHERITE FINDER','RTP BASE FINDER','AUTO SHULKER BUY','TUNNEL BASE FINDER','FAKE STATS','SPAWNER PROTECT','CHUNK FINDER','SUS CHUNK FINDER'],
-      '⬢ BASEFINDING':['SEED CHUNK FINDER','HOLE ESP','LIGHT FINDER','SUSPICIOUS ESP'],
-      '◉ RENDER':['ORE SIM','FULLBRIGHT','HUD','PLAYER ESP','STORAGE ESP','BLOCK ESP','TARGET HUD','REALHITBOX','FREE LOOK'],
-      '✦ CLIENT':['KRYPTON+','RADIO','FRIENDS','DISCORD PRESENCE'],
-      '⚒ SEARCH':[]
-    },
+    accent:'#68d7ff',title:'KRYPTON+',
+    categories:[
+      {icon:MCITEM+'item/diamond_sword.png',title:'COMBAT',mods:['AIM ASSIST','ANCHOR MACRO','AUTO DOUBLE HAND','AUTO CRYSTAL','AUTO HIT CRYSTAL','AUTO INV TOTEM','AUTO JUMP RESET','AUTO TOTEM','CRYSTAL OPTIMIZER','DOUBLE ANCHOR','ELYTRA SWAP','HITBOX','HOVER TOTEM','TOTEM OFFHAND','MACE SWAP','NO HIT DELAY','SHIELD BREAKER','STATIC HITBOXES','TRIGGER BOT','MACE BOMBER']},
+      {icon:MCITEM+'item/redstone.png',title:'MISC',mods:['AUTO CLICKER','AUTO EAT','AUTO FIREWORK','AUTO LOG','AUTO LOOT','AUTO MINE','AUTO TOOL','AUTO TPR','CORD SNAPPER','ELYTRA GLIDE','FAST PLACE','FREECAM','KEY PEARL','KEY WIND CHARGE','NAME PROTECT','SPRINT','SKIN PROTECT','AUTO RECONNECT']},
+      {icon:MCITEM+'block/oak_leaves.png',title:'DONUT',mods:['ANTI TRAP','AUCTION SNIPER','AUTO SELL','AUTO SPAWNER SELL','ITEM DROPPER','NETHERITE FINDER','RTP BASE FINDER','AUTO SHULKER BUY','TUNNEL BASE FINDER','FAKE STATS','SPAWNER PROTECT','CHUNK FINDER','SUS CHUNK FINDER']},
+      {icon:MCITEM+'item/shulker_shell.png',title:'BASEFINDING',mods:['SEED CHUNK FINDER','HOLE ESP','LIGHT FINDER','SUSPICIOUS ESP']},
+      {icon:MCITEM+'item/slime_ball.png',title:'RENDER',mods:['ORE SIM','FULLBRIGHT','HUD','PLAYER ESP','STORAGE ESP','BLOCK ESP','TARGET HUD','REALHITBOX','FREE LOOK']},
+      {icon:MCITEM+'item/nether_star.png',title:'CLIENT',mods:['KRYPTON+','RADIO','FRIENDS','DISCORD PRESENCE']},
+      {icon:MCITEM+'item/golden_pickaxe.png',title:'SEARCH',mods:[] ,search:true}
+    ],
     enabled:['KRYPTON+','HUD']
   },
   'Mei Mei Client':{
     accent:'#b45cff',title:'MEI MEI',
-    categories:{'COMBAT':['CRITICALS','HITBOX','TARGET HUD'],'MISC':['AUTO SELL','CHEST STEAL','FREECAM'],'MOVEMENT':['SPEED','SPRINT','STEP'],'RENDER':['FULLBRIGHT','PLAYER ESP','TRACERS'],'CLIENT':['HUD','FRIENDS','RADIO'],'SEARCH':[]},
-    enabled:[]
+    categories:[
+      {icon:MCITEM+'item/diamond_sword.png',title:'COMBAT',mods:['CRITICALS','HITBOX','TARGET HUD']},
+      {icon:MCITEM+'item/redstone.png',title:'MISC',mods:['AUTO SELL','CHEST STEAL','FREECAM']},
+      {icon:MCITEM+'item/slime_ball.png',title:'MOVEMENT',mods:['SPEED','SPRINT','STEP']},
+      {icon:MCITEM+'item/ender_pearl.png',title:'RENDER',mods:['FULLBRIGHT','PLAYER ESP','TRACERS']},
+      {icon:MCITEM+'item/nether_star.png',title:'CLIENT',mods:['HUD','FRIENDS','RADIO']},
+      {icon:MCITEM+'item/golden_pickaxe.png',title:'SEARCH',mods:[],search:true}
+    ],enabled:[]
   }
 };
 let clientMenu=document.getElementById('client-menu');
 function buildClientMenu(){
-  if(!clientMenu){
-    clientMenu=document.createElement('div');
-    clientMenu.id='client-menu';
-    document.body.appendChild(clientMenu);
-  }
+  if(!clientMenu){clientMenu=document.createElement('div');clientMenu.id='client-menu';document.body.appendChild(clientMenu)}
   const profile=clientProfiles[debugState.clientProfile]||clientProfiles['Krypton Client'];
   clientMenu.style.setProperty('--client-accent',profile.accent);
-  clientMenu.innerHTML='<div class="cm-head"><span class="cm-brand"><span class="cm-brand-mark">K</span><span class="cm-brand-name">KRYPTON</span></span><span class="cm-close">RIGHT SHIFT</span></div><div class="cm-grid">'+Object.entries(profile.categories).map(([cat,mods])=>'<section class="cm-col"><div class="cm-cat"><span>'+cat.slice(0,2)+'</span>'+cat.slice(2)+'</div>'+(cat.includes('SEARCH')?'<input class="cm-search" placeholder="">':'')+mods.map(m=>'<button class="cm-mod '+(profile.enabled?.includes(m)?'enabled':'')+'" data-module="'+m+'"><span>'+m+'</span><i></i></button>').join('')+'</section>').join('')+'</div>';
-  clientMenu.querySelector('.cm-close').onclick=()=>clientMenu.classList.remove('open');
+  clientMenu.innerHTML='<div class="cm-grid">'+profile.categories.map(cat=>'<section class="cm-col"><div class="cm-cat"><img src="'+cat.icon+'" alt=""><span>'+cat.title+'</span><b>−</b></div>'+(cat.search?'<input class="cm-search" placeholder="">':'')+cat.mods.map(mod=>'<button class="cm-mod '+(profile.enabled?.includes(mod)?'enabled':'')+'" data-module="'+mod+'"><span>'+mod+'</span><i></i></button>').join('')+'</section>').join('')+'</div>';
   clientMenu.querySelectorAll('.cm-mod').forEach(b=>b.onclick=()=>b.classList.toggle('enabled'));
   const search=clientMenu.querySelector('.cm-search');
   if(search)search.oninput=()=>{const q=search.value.toLowerCase();clientMenu.querySelectorAll('.cm-mod').forEach(b=>b.style.display=b.dataset.module.toLowerCase().includes(q)?'flex':'none')};
