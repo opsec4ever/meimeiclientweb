@@ -538,7 +538,7 @@ document.addEventListener('keydown',e=>{
     if(debugOpen){document.exitPointerLock?.();restorePositions();renderTextControls()}
     return;
   }
-  if(e.code==='KeyV'){e.preventDefault();debugState.thirdPerson=!debugState.thirdPerson;updateHeldView();saveDebug()}
+  if(e.code==='KeyV'){e.preventDefault();debugState.cameraMode=(Number(debugState.cameraMode||0)+1)%3;cameraUpdate();updateHeldView();saveDebug()}
 },true);
 window.addEventListener('load',()=>{setTimeout(()=>{applyDebug();restorePositions();debugState.items.forEach(it=>{const e=document.createElement('div');e.className='custom-hud';e.id=it.id;e.textContent=it.text;e.style.color=it.color;e.style.left='10px';e.style.top='120px';document.body.appendChild(e);makeDraggable(e)});},0)});
 
