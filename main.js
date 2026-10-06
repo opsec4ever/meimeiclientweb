@@ -83,20 +83,25 @@ const clock=new THREE.Clock();
 const defaultSkin='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAzFBMVEUAAAAiULooWMMxZMQ7Rlo7bslAd81IgtJPXnpTj9lbmN1mo+NvfpxwrOZ7t+yKwu2Xy+6i1vSt3ve5sa26sa69tbHBzt/C6PrEtrLEurbMwb3M8P/NvbrNwr7Q4/PRxsLSwr7WxsLa6vbcysbcy8fdy8fezMjezcje9f/fzcngzsrhz8vh5ebi0Mzi7PDo1dDp1tHp19Lp9f/q19Lv29bz39n14dv45N755d/+4tT/2sv/28z/3M3/3c3/3s7/5df/5tj/8OT/8eX///9tosDZAAAAAXRSTlMAQObYZgAABIBJREFUWMPFVw1X2koQXYFASQrJ5uWVEljBpCitUnDRaKutyv7///Tu7GYhkUhj7embg7PfN7MzszMjYzlxHoI4j6JjKY+jiD0nHjIWcnRonbGK9QEo5MPoX1A0rFhnbKARqikcjECDUEw0if114oPwAAAQIMIkJ/ZakhJK4FJOJj8fHn7uA0i545WUQDfQToLzmw0QXlp/EWDyJZEy+TKZ/CCAHxVXoPUDVxBCfPwINrl/CQCLosp8uLpMRIESSf5g/YLsb74sFgthJNH+YP0C9oXqznfnZ1An7M3JrqY1qluIq4VYGEXm89ovsI/LZL0DWCeS42Q4mM/lnFpGEiwWV4vbK7AFScDMvPaLcMQTeZ4JcfcAuhMiO5cJH4XhaC7lfBQamQFwSwC3AGBlXXJ8XwO0WptNq2UAJFQwGOH8gNN+A8Bur1gOIMvGOc7O16L1/t1m8+59S6zPM5g8SYxjJYl5OnSQXeWtWdeOldBgvRYz0fr64f7+w9cWuus1Dh1Lsju1eqc+uG0L6ywais+fSXl3ZP876mE8jPae9WLLcio866bT7siCn1mDYLrb7bQdO+8H/KjRrHAm2lgFgGnXBYKdD3jY2Dj1AL5/rwRQ1QAVV/j2re4Vmo7TJADair1NKJXo8VE3pEzEODBfBT4AyLY88AsAT0RAAEQb55+iMBQiFeCpwO4oOolO8Pun7/v9vgpwiyDw+88Bnp4eNaETcSXEEgEuXIqAgvTZ+OxkfBb1+v1eDyg47vfVAYBxEMCduQp5JvxAjceX08tP08ux11OeBxQSpOcdAJj6/izNlpwvsxS7p9Ob05vV6c3U9TxXAYUE8dziWzB0rAmdGe3IlkGwzCByf3ZqAE7JoF2g4Lhyu6Voq8kAoBOr3mqVLX1/ma1WvV4cG4BYkZWAAkHgGvsARg4C8DwAkMoA4HlxfB1fr8C0lToKEKrgWlUArpumWdpTYKnrxvEqXuEXw9Bq5y4HALADVhCeBybwsU4cp2kcd3KHayvtLgcA8BHVTkllqTJid+MYQjeazUZDOYBwnIvGAQC9gy7baTt5H1JfOEeqcYSHoAVpHD1/D+yN5PzvAG+6gtZKEWtYyKBiWBvFxgP2Z2i5ZURnJ688LsQ1NdemHLhkl5/ATDwwG0rxoILS1AAstQw37GYFZuKB2VCOByYibIPDHlwOYOKBmSrFgwpaMSMBOjuA11AZAGNqzcMyE6V4UANOMxMPzFT7V64rSg3FA5uActf/pbukW/b3qCQU5UgKLts6KvD3g8ihF03RqAigeOBsGm8ACGsAvPkKTRsXbJ1gzHbR0QWBMlk5qPqHpxQHCnWCrRuQ4qkg6Cv8+UENc9gsbbM2UjwyOuVZZGb/NwBMQaAoK6M8yDfZcR2AnikIEA6Uuz1hx+UiQXNm6wRbN3gKn3K7ypQHzAYEVQgPZbJ1gq0bdCTqmqzcVTV0YHOkzZk6EunSgPLs1lHMuA4APq12edbaPh/XATB+obRfXdgT+VjVAVD0KSoN8Nd0fkMHeUFw1NDlwf7+/wA0q9+Nt/XEoAAAAABJRU5ErkJggg==';
 let customSkin=defaultSkin;
 const skinImage=new Image();
-skinImage.crossOrigin='anonymous';
+skinImage.decoding='async';
 
 const heldGroup=new THREE.Group();
 camera.add(heldGroup);
 heldGroup.position.set(0,0,0);
 heldGroup.visible=true;
 
-function skinCrop(x,y,w,h){
+const playerModel=new THREE.Group();
+playerModel.visible=false;
+scene.add(playerModel);
+
+function skinCrop(x,y,w,h,transparent=false){
+  const scale=Math.max(1,(skinImage.naturalWidth||64)/64);
   const cv=document.createElement('canvas');
   cv.width=w;cv.height=h;
   const cx=cv.getContext('2d');
   cx.imageSmoothingEnabled=false;
   cx.clearRect(0,0,w,h);
-  cx.drawImage(skinImage,x,y,w,h,0,0,w,h);
+  cx.drawImage(skinImage,x*scale,y*scale,w*scale,h*scale,0,0,w,h);
   const tex=new THREE.CanvasTexture(cv);
   tex.magFilter=THREE.NearestFilter;
   tex.minFilter=THREE.NearestFilter;
@@ -106,7 +111,7 @@ function skinCrop(x,y,w,h){
 }
 function skinMat(x,y,w,h,transparent=false){
   return new THREE.MeshBasicMaterial({
-    map:skinCrop(x,y,w,h),
+    map:skinCrop(x,y,w,h,transparent),
     transparent,
     alphaTest:transparent?.01:0,
     side:THREE.DoubleSide,
@@ -114,58 +119,81 @@ function skinMat(x,y,w,h,transparent=false){
     depthWrite:false
   });
 }
-function armMaterials(side){
-  if(side==='right'){
-    return [
-      skinMat(40,20,4,12), // right
-      skinMat(48,20,4,12), // left
-      skinMat(44,16,4,4),  // top
-      skinMat(48,16,4,4),  // bottom
-      skinMat(44,20,4,12), // front
-      skinMat(52,20,4,12)  // back
-    ];
-  }
+function boxMats(r,transparent=false){
   return [
-    skinMat(32,52,4,12), // right
-    skinMat(40,52,4,12), // left
-    skinMat(36,48,4,4),  // top
-    skinMat(40,48,4,4),  // bottom
-    skinMat(36,52,4,12), // front
-    skinMat(44,52,4,12)  // back
+    skinMat(...r.right,transparent),
+    skinMat(...r.left,transparent),
+    skinMat(...r.top,transparent),
+    skinMat(...r.bottom,transparent),
+    skinMat(...r.front,transparent),
+    skinMat(...r.back,transparent)
   ];
 }
-function armOverlayMaterials(side){
-  if(side==='right'){
-    return [
-      skinMat(40,36,4,12,true),
-      skinMat(48,36,4,12,true),
-      skinMat(44,32,4,4,true),
-      skinMat(48,32,4,4,true),
-      skinMat(44,36,4,12,true),
-      skinMat(52,36,4,12,true)
-    ];
+const skinRegions={
+  head:{
+    right:[0,8,8,8],left:[16,8,8,8],top:[8,0,8,8],bottom:[16,0,8,8],front:[8,8,8,8],back:[24,8,8,8]
+  },
+  body:{
+    right:[16,20,4,12],left:[28,20,4,12],top:[20,16,8,4],bottom:[28,16,8,4],front:[20,20,8,12],back:[32,20,8,12]
+  },
+  rightArm:{
+    right:[40,20,4,12],left:[48,20,4,12],top:[44,16,4,4],bottom:[48,16,4,4],front:[44,20,4,12],back:[52,20,4,12]
+  },
+  leftArm:{
+    right:[32,52,4,12],left:[40,52,4,12],top:[36,48,4,4],bottom:[40,48,4,4],front:[36,52,4,12],back:[44,52,4,12]
+  },
+  rightLeg:{
+    right:[0,20,4,12],left:[8,20,4,12],top:[4,16,4,4],bottom:[8,16,4,4],front:[4,20,4,12],back:[12,20,4,12]
+  },
+  leftLeg:{
+    right:[16,52,4,12],left:[24,52,4,12],top:[20,48,4,4],bottom:[24,48,4,4],front:[20,52,4,12],back:[28,52,4,12]
   }
-  return [
-    skinMat(48,52,4,12,true),
-    skinMat(56,52,4,12,true),
-    skinMat(52,48,4,4,true),
-    skinMat(56,48,4,4,true),
-    skinMat(52,52,4,12,true),
-    skinMat(60,52,4,12,true)
-  ];
-}
-function setupSkinArms(){
-  heldGroup.children.filter(o=>o.userData&&o.userData.skinArm).forEach(o=>{
-    heldGroup.remove(o);
-    o.traverse(x=>{if(x.material?.map)x.material.map.dispose();if(x.material)x.material.dispose()});
+};
+const overlayRegions={
+  head:{
+    right:[32,8,8,8],left:[48,8,8,8],top:[40,0,8,8],bottom:[48,0,8,8],front:[40,8,8,8],back:[56,8,8,8]
+  },
+  body:{
+    right:[16,36,4,12],left:[28,36,4,12],top:[20,32,8,4],bottom:[28,32,8,4],front:[20,36,8,12],back:[32,36,8,12]
+  },
+  rightArm:{
+    right:[40,36,4,12],left:[48,36,4,12],top:[44,32,4,4],bottom:[48,32,4,4],front:[44,36,4,12],back:[52,36,4,12]
+  },
+  leftArm:{
+    right:[48,52,4,12],left:[56,52,4,12],top:[52,48,4,4],bottom:[56,48,4,4],front:[52,52,4,12],back:[60,52,4,12]
+  },
+  rightLeg:{
+    right:[0,36,4,12],left:[8,36,4,12],top:[4,32,4,4],bottom:[8,32,4,4],front:[4,36,4,12],back:[12,36,4,12]
+  },
+  leftLeg:{
+    right:[0,52,4,12],left:[8,52,4,12],top:[4,48,4,4],bottom:[8,48,4,4],front:[4,52,4,12],back:[12,52,4,12]
+  }
+};
+
+function disposeSkinObject(obj){
+  obj.traverse(o=>{
+    if(o.geometry)o.geometry.dispose();
+    if(o.material){
+      const ms=Array.isArray(o.material)?o.material:[o.material];
+      for(const m of ms){if(m.map)m.map.dispose();m.dispose()}
+    }
   });
-  const rg=new THREE.Mesh(new THREE.BoxGeometry(.30,.90,.30),armMaterials('right'));
-  const lg=new THREE.Mesh(new THREE.BoxGeometry(.30,.90,.30),armMaterials('left'));
-  const ro=new THREE.Mesh(new THREE.BoxGeometry(.315,.915,.315),armOverlayMaterials('right'));
-  const lo=new THREE.Mesh(new THREE.BoxGeometry(.315,.915,.315),armOverlayMaterials('left'));
-  rg.userData.skinArm=lg.userData.skinArm=ro.userData.skinArm=lo.userData.skinArm=true;
-  rg.position.set(.43,-.43,-.92);
-  lg.position.set(-.43,-.45,-.92);
+}
+
+function clearSkinGroup(group){
+  const old=[...group.children];
+  for(const o of old){group.remove(o);disposeSkinObject(o)}
+}
+
+function setupSkinArms(){
+  clearSkinGroup(heldGroup);
+  const rg=new THREE.Mesh(new THREE.BoxGeometry(.30,.90,.30),boxMats(skinRegions.rightArm));
+  const lg=new THREE.Mesh(new THREE.BoxGeometry(.30,.90,.30),boxMats(skinRegions.leftArm));
+  const ro=new THREE.Mesh(new THREE.BoxGeometry(.315,.915,.315),boxMats(overlayRegions.rightArm,true));
+  const lo=new THREE.Mesh(new THREE.BoxGeometry(.315,.915,.315),boxMats(overlayRegions.leftArm,true));
+  for(const o of [rg,lg,ro,lo])o.userData.skinArm=true;
+  rg.position.set(.43,-.43,-1.12);
+  lg.position.set(-.43,-.45,-1.12);
   ro.position.copy(rg.position);
   lo.position.copy(lg.position);
   rg.rotation.set(-.38,-.12,.12);
@@ -174,14 +202,63 @@ function setupSkinArms(){
   lo.rotation.copy(lg.rotation);
   for(const o of [rg,lg,ro,lo]){o.frustumCulled=false;o.renderOrder=10000;heldGroup.add(o)}
 }
+
+function addPlayerPart(group,geometry,mats,pos){
+  const mesh=new THREE.Mesh(geometry,mats);
+  mesh.position.copy(pos);
+  mesh.frustumCulled=false;
+  group.add(mesh);
+  return mesh;
+}
+
+function setupPlayerModel(){
+  clearSkinGroup(playerModel);
+  const head=addPlayerPart(playerModel,new THREE.BoxGeometry(.5,.5,.5),boxMats(skinRegions.head),new THREE.Vector3(0,1.55,0));
+  const body=addPlayerPart(playerModel,new THREE.BoxGeometry(.5,.75,.25),boxMats(skinRegions.body),new THREE.Vector3(0,1.025,0));
+  const ra=addPlayerPart(playerModel,new THREE.BoxGeometry(.25,.75,.25),boxMats(skinRegions.rightArm),new THREE.Vector3(.375,1.025,0));
+  const la=addPlayerPart(playerModel,new THREE.BoxGeometry(.25,.75,.25),boxMats(skinRegions.leftArm),new THREE.Vector3(-.375,1.025,0));
+  const rl=addPlayerPart(playerModel,new THREE.BoxGeometry(.25,.75,.25),boxMats(skinRegions.rightLeg),new THREE.Vector3(.125,.375,0));
+  const ll=addPlayerPart(playerModel,new THREE.BoxGeometry(.25,.75,.25),boxMats(skinRegions.leftLeg),new THREE.Vector3(-.125,.375,0));
+  const parts=[head,body,ra,la,rl,ll];
+  const overlayScale=[1.055,1.045,1.055,1.055,1.055,1.055];
+  const regs=[overlayRegions.head,overlayRegions.body,overlayRegions.rightArm,overlayRegions.leftArm,overlayRegions.rightLeg,overlayRegions.leftLeg];
+  const geoms=[
+    new THREE.BoxGeometry(.53,.53,.53),
+    new THREE.BoxGeometry(.52,.77,.27),
+    new THREE.BoxGeometry(.27,.77,.27),
+    new THREE.BoxGeometry(.27,.77,.27),
+    new THREE.BoxGeometry(.27,.77,.27),
+    new THREE.BoxGeometry(.27,.77,.27)
+  ];
+  const poses=parts.map(p=>p.position.clone());
+  for(let i=0;i<geoms.length;i++){
+    const o=addPlayerPart(playerModel,geoms[i],boxMats(regs[i],true),poses[i]);
+    o.scale.setScalar(overlayScale[i]);
+    o.renderOrder=2;
+  }
+  playerModel.position.copy(player.position);
+  playerModel.rotation.y=yaw+Math.PI;
+}
+
 function loadSkinTexture(src){
+  const use=src||defaultSkin;
   skinImage.onload=()=>{
+    const w=skinImage.naturalWidth,h=skinImage.naturalHeight;
+    if(w<64||h<32||(w!==h&&h!==32)){
+      console.error('[Mei Mei] invalid skin size',w+'x'+h);
+      if(use!==defaultSkin){customSkin=defaultSkin;loadSkinTexture(defaultSkin)}
+      return;
+    }
     setupSkinArms();
-    console.log('[Mei Mei] skin loaded',skinImage.naturalWidth+'x'+skinImage.naturalHeight);
+    setupPlayerModel();
+    console.log('[Mei Mei] skin loaded',w+'x'+h);
   };
-  skinImage.onerror=()=>console.error('[Mei Mei] failed to load skin');
-  skinImage.src=src||defaultSkin;
-  if(skinImage.complete&&skinImage.naturalWidth)setupSkinArms();
+  skinImage.onerror=()=>{
+    console.error('[Mei Mei] failed to load skin');
+    if(use!==defaultSkin){customSkin=defaultSkin;loadSkinTexture(defaultSkin)}
+  };
+  skinImage.src='';
+  skinImage.src=use;
 }
 loadSkinTexture(defaultSkin);
 
@@ -513,10 +590,14 @@ function move(dt){
 function cameraUpdate(){
   if(debugState.thirdPerson){
     heldGroup.visible=false;
+    playerModel.visible=true;
+    playerModel.position.copy(player.position);
+    playerModel.rotation.y=yaw+Math.PI;
     const back=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
-    camera.position.copy(player.position).add(new THREE.Vector3(0,1.1,0)).addScaledVector(back,-4);
-    camera.lookAt(player.position.x,player.position.y+1.25,player.position.z);
+    camera.position.copy(player.position).add(new THREE.Vector3(0,1.0,0)).addScaledVector(back,4);
+    camera.lookAt(player.position.x,player.position.y+1.0,player.position.z);
   }else{
+    playerModel.visible=false;
     camera.position.set(player.position.x,player.position.y+1.62,player.position.z);
     camera.rotation.order='YXZ';
     camera.rotation.y=yaw;
