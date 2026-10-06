@@ -340,7 +340,7 @@ function applyTotem(src){
   const fallback='https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/item/totem_of_undying.png';
   const use=src||fallback;
   const slot=document.querySelector('.offhand-slot');
-  if(slot)slot.style.backgroundImage='url("'+use+'")';
+  if(slot)slot.style.setProperty('background-image','url("'+use+'")','important');
   const im=new Image();
   im.crossOrigin='anonymous';
   im.onload=()=>{totemImage=im;drawTotem()};
