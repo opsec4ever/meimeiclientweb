@@ -374,7 +374,7 @@ function animateHeld(dt){
   glintTexture.offset.x=(t*.35)%1;
   glintTexture.offset.y=(t*.18)%1;
 }
-const debugState={scoreTitle:'MeiMei',balance:'100k',hideBottom:false,coverImage:'',snap:10,items:[],armDistance:1,showArms:true,cameraMode:0,cameraKey:'V',skin:'',totem:''};
+const debugState={scoreTitle:'MeiMei',balance:'100k',hideBottom:false,coverImage:'',snap:10,items:[],armDistance:1,showArms:true,cameraMode:0,cameraKey:'V',skin:'',totem:'',clientProfile:'Krypton Client',glintEnabled:true,glintColor:'#b45cff',glintColor2:'#ffffff',glintMode:'static',glintSpeed:35,glintStrength:75,glintScale:1,glintAngle:45,glintBloom:false,glintBloomStrength:35};
 let debugOpen=false;
 const debugPanel=document.createElement('div');debugPanel.id='debug-panel';debugPanel.innerHTML=`
 <div class="dbg-box"><div class="dbg-title">HUD DEBUG</div>
