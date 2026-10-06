@@ -487,19 +487,25 @@ document.getElementById('dbg-glint-bloom-strength').oninput=e=>{debugState.glint
 document.getElementById('dbg-hide').onclick=()=>{debugState.hideBottom=!debugState.hideBottom;document.getElementById('dbg-hide').textContent=debugState.hideBottom?'show bottom hud':'hide bottom hud';applyDebug();saveDebug()};
 document.getElementById('dbg-add').onclick=()=>addTextHud();
 const clientProfiles={
-  'Krypton Client':{accent:'#7ee7ff',title:'KRYPTON',categories:{
-    COMBAT:['KILL AURA','AUTO CRYSTAL','AUTO TOTEM','BED TRAPS','CRYSTAL NUKER','HITBOX','INSTANT BREAK','NO SLOW','REACH','TRIGGER BOT'],
-    MISC:['AUTO COLLECT','AUTO SELL','CHAT MACRO','CHEST STEAL','FAST PLACE','FREECAM','INV MOVE','ITEM SWAPPER','SPAM'],
-    MOVEMENT:['FLY','FULLBRIGHT','JESUS','LONG JUMP','NO FALL','SPEED','STEP','VELOCITY'],
-    RENDER:['BLOCK ESP','ENTITY ESP','FULLBRIGHT','NAME TAGS','ORE ESP','PLAYER ESP','STORAGE ESP','TRACERS'],
-    EXPLOIT:['PACKET FLY','PHASE','SELF DESTRUCT','SUSPICIOUS ESP'],
-    CLIENT:['CHAT MACRO','DISCORD PRESENCE','FRIENDS','HUD','MUSIC HUD'],
-    SEARCH:[]
-  }},
-  'Mei Mei Client':{accent:'#b45cff',title:'MEI MEI',categories:{COMBAT:['CRITICALS','HITBOX','TARGET HUD'],MISC:['AUTO SELL','CHEST STEAL','FREECAM'],MOVEMENT:['SPEED','SPRINT','STEP'],RENDER:['BLOCK ESP','FULLBRIGHT','PLAYER ESP','TRACERS'],CLIENT:['HUD','FRIENDS','RADIO'],SEARCH:[]}},
-  'Lunar Client':{accent:'#55aaff',title:'LUNAR',categories:{COMBAT:['COMBO','REACH'],MISC:['CPS','KEYSTROKES'],MOVEMENT:['SPRINT','TOGGLE SPRINT'],RENDER:['FULLBRIGHT','PLAYER ESP'],CLIENT:['HUD','WAYPOINTS'],SEARCH:[]}},
-  'Feather Client':{accent:'#f0a34a',title:'FEATHER',categories:{COMBAT:['COMBO','HITBOX'],MISC:['CPS','CHAT'],MOVEMENT:['SPEED','SPRINT'],RENDER:['FULLBRIGHT','TRACERS'],CLIENT:['HUD','COSMETICS'],SEARCH:[]}},
-  'Badlion Client':{accent:'#e84f63',title:'BADLION',categories:{COMBAT:['COMBO','HITBOX'],MISC:['CPS','CHAT'],MOVEMENT:['SPRINT','TOGGLE SPRINT'],RENDER:['FULLBRIGHT','PLAYER ESP'],CLIENT:['HUD','COSMETICS'],SEARCH:[]}}
+  'Krypton Client':{
+    accent:'#68d7ff',
+    title:'KRYPTON+',
+    categories:{
+      '⚔ COMBAT':['AIM ASSIST','ANCHOR MACRO','AUTO DOUBLE HAND','AUTO CRYSTAL','AUTO HIT CRYSTAL','AUTO INV TOTEM','AUTO JUMP RESET','AUTO TOTEM','CRYSTAL OPTIMIZER','DOUBLE ANCHOR','ELYTRA SWAP','HITBOX','HOVER TOTEM','TOTEM OFFHAND','MACE SWAP','NO HIT DELAY','SHIELD BREAKER','STATIC HITBOXES','TRIGGER BOT','MACE BOMBER'],
+      '▰ MISC':['AUTO CLICKER','AUTO EAT','AUTO FIREWORK','AUTO LOG','AUTO LOOT','AUTO MINE','AUTO TOOL','AUTO TPR','CORD SNAPPER','ELYTRA GLIDE','FAST PLACE','FREECAM','KEY PEARL','KEY WIND CHARGE','NAME PROTECT','SPRINT','SKIN PROTECT','AUTO RECONNECT'],
+      '◆ DONUT':['ANTI TRAP','AUCTION SNIPER','AUTO SELL','AUTO SPAWNER SELL','ITEM DROPPER','NETHERITE FINDER','RTP BASE FINDER','AUTO SHULKER BUY','TUNNEL BASE FINDER','FAKE STATS','SPAWNER PROTECT','CHUNK FINDER','SUS CHUNK FINDER'],
+      '⬢ BASEFINDING':['SEED CHUNK FINDER','HOLE ESP','LIGHT FINDER','SUSPICIOUS ESP'],
+      '◉ RENDER':['ORE SIM','FULLBRIGHT','HUD','PLAYER ESP','STORAGE ESP','BLOCK ESP','TARGET HUD','REALHITBOX','FREE LOOK'],
+      '✦ CLIENT':['KRYPTON+','RADIO','FRIENDS','DISCORD PRESENCE'],
+      '⚒ SEARCH':[]
+    },
+    enabled:['KRYPTON+','HUD']
+  },
+  'Mei Mei Client':{
+    accent:'#b45cff',title:'MEI MEI',
+    categories:{'COMBAT':['CRITICALS','HITBOX','TARGET HUD'],'MISC':['AUTO SELL','CHEST STEAL','FREECAM'],'MOVEMENT':['SPEED','SPRINT','STEP'],'RENDER':['FULLBRIGHT','PLAYER ESP','TRACERS'],'CLIENT':['HUD','FRIENDS','RADIO'],'SEARCH':[]},
+    enabled:[]
+  }
 };
 let clientMenu=document.getElementById('client-menu');
 function buildClientMenu(){
@@ -510,7 +516,7 @@ function buildClientMenu(){
   }
   const profile=clientProfiles[debugState.clientProfile]||clientProfiles['Krypton Client'];
   clientMenu.style.setProperty('--client-accent',profile.accent);
-  clientMenu.innerHTML='<div class="cm-head"><span class="cm-logo">'+profile.title+'</span><span class="cm-close">RIGHT SHIFT</span></div><div class="cm-grid">'+Object.entries(profile.categories).map(([cat,mods])=>'<section class="cm-col"><div class="cm-cat">'+cat+'</div>'+(cat==='SEARCH'?'<input class="cm-search" placeholder="SEARCH MODULES">':'')+mods.map(m=>'<button class="cm-mod" data-module="'+m+'"><span>'+m+'</span><i></i></button>').join('')+'</section>').join('')+'</div>';
+  clientMenu.innerHTML='<div class="cm-head"><span class="cm-brand"><span class="cm-brand-mark">K</span><span class="cm-brand-name">KRYPTON</span></span><span class="cm-close">RIGHT SHIFT</span></div><div class="cm-grid">'+Object.entries(profile.categories).map(([cat,mods])=>'<section class="cm-col"><div class="cm-cat"><span>'+cat.slice(0,2)+'</span>'+cat.slice(2)+'</div>'+(cat.includes('SEARCH')?'<input class="cm-search" placeholder="">':'')+mods.map(m=>'<button class="cm-mod '+(profile.enabled?.includes(m)?'enabled':'')+'" data-module="'+m+'"><span>'+m+'</span><i></i></button>').join('')+'</section>').join('')+'</div>';
   clientMenu.querySelector('.cm-close').onclick=()=>clientMenu.classList.remove('open');
   clientMenu.querySelectorAll('.cm-mod').forEach(b=>b.onclick=()=>b.classList.toggle('enabled'));
   const search=clientMenu.querySelector('.cm-search');
