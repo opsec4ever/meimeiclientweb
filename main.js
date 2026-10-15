@@ -74,7 +74,7 @@ let placeRotation=0;
 const chunks=new Map(),geometry=new THREE.BoxGeometry(1,1,1),temp=new THREE.Object3D(),broken=new Set(),placed=new Map(),drops=[];
 const keys={};
 const player={position:new THREE.Vector3(0,45,0),velocity:new THREE.Vector3(),height:1.8,width:.6,onGround:false};
-let yaw=0,pitch=0,locked=false,gameStarted=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0,selectedSlot=0,cps=0,clickTimes=[],inventoryOpen=false,walkTime=0;
+let yaw=0,pitch=0,locked=false,gameStarted=false,frameCount=0,fpsTime=performance.now(),chunkTimer=0,selectedSlot=0,cps=0,clickTimes=[],inventoryOpen=false,walkTime=0,attackStarted=-1000;
 const inventoryCounts=new Array(9).fill(0);
 const HOTBAR_ICONS=['grass_block_top','dirt','stone','sand','oak_log','oak_leaves','deepslate','stone','bedrock'].map(n=>ASSET_BASE+n+'.png');
 
@@ -355,23 +355,31 @@ function updateHeldView(){
 }
 function animateHeld(dt){
   const t=performance.now()*.001;
-  const moving=gameStarted&&!inventoryOpen&&player.onGround&&Math.hypot(player.velocity.x,player.velocity.z)>.15;
   const speed=Math.hypot(player.velocity.x,player.velocity.z);
-  if(moving)walkTime+=(speed>5.5?11:8)*dt;
-  const bob=moving?Math.abs(Math.sin(walkTime))*.035:0;
+  const moving=gameStarted&&!inventoryOpen&&player.onGround&&speed>.12;
+  if(moving)walkTime+=dt*(speed>4.8?12:9);
+  const phase=walkTime;
+  const bob=moving?Math.abs(Math.sin(phase))*.035:0;
+  const walkSwing=moving?Math.sin(phase)*.12:0;
   pickaxeGroup.position.y=bob;
   totemMesh.position.y=-.42+bob*.7;
+  heldGroup.position.x=moving?Math.cos(phase)*.008:0;
+  heldGroup.position.y=moving?Math.abs(Math.sin(phase*2))*.012:0;
+  const elapsed=performance.now()-attackStarted;
+  const swing=elapsed<260?Math.sin((elapsed/260)*Math.PI):0;
+  pickaxeGroup.rotation.x=walkSwing-swing*1.05;
+  pickaxeGroup.rotation.y=swing*.16;
+  pickaxeGroup.rotation.z=-walkSwing*.4-swing*.42;
   if(playerModel.visible){
-    const swing=moving?Math.sin(walkTime)*.5:0;
     const p=playerModel.children;
-    if(p[2])p[2].rotation.x=swing;
-    if(p[3])p[3].rotation.x=-swing;
-    if(p[4])p[4].rotation.x=-swing;
-    if(p[5])p[5].rotation.x=swing;
-    if(p[8])p[8].rotation.x=swing;
-    if(p[9])p[9].rotation.x=-swing;
-    if(p[10])p[10].rotation.x=-swing;
-    if(p[11])p[11].rotation.x=swing;
+    if(p[2])p[2].rotation.x=walkSwing-swing*.8;
+    if(p[3])p[3].rotation.x=-walkSwing;
+    if(p[4])p[4].rotation.x=-walkSwing;
+    if(p[5])p[5].rotation.x=walkSwing;
+    if(p[8])p[8].rotation.x=walkSwing;
+    if(p[9])p[9].rotation.x=-walkSwing;
+    if(p[10])p[10].rotation.x=-walkSwing;
+    if(p[11])p[11].rotation.x=walkSwing;
   }
   updateGlintVisual(t);
 }
@@ -700,57 +708,76 @@ function collides(p){
 }
 function move(dt){
   const sprint=keys.ShiftLeft||keys.ShiftRight;
-  const speed=sprint?7:4,d=new THREE.Vector3();
-  if(keys.KeyW)d.z-=1;if(keys.KeyS)d.z+=1;if(keys.KeyA)d.x-=1;if(keys.KeyD)d.x+=1;
-  if(d.lengthSq()){
-    d.normalize();
-    const sin=Math.sin(yaw),cos=Math.cos(yaw),x=d.x*cos+d.z*sin,z=-d.x*sin+d.z*cos;
-    const accel=player.onGround?(sprint?28:22):10;
-    player.velocity.x+=x*accel*dt;
-    player.velocity.z+=z*accel*dt;
-    const max=speed;
-    const hs=Math.hypot(player.velocity.x,player.velocity.z);
-    if(hs>max){player.velocity.x=player.velocity.x/hs*max;player.velocity.z=player.velocity.z/hs*max}
-  }else{
-    const drag=player.onGround?.72:.92;
-    player.velocity.x*=Math.pow(drag,dt*20);
-    player.velocity.z*=Math.pow(drag,dt*20);
+  const forward=(keys.KeyW?1:0)-(keys.KeyS?1:0);
+  const strafe=(keys.KeyD?1:0)-(keys.KeyA?1:0);
+  const inputLen=Math.hypot(forward,strafe);
+  const grounded=player.onGround;
+  const speed=sprint?5.612:4.317;
+  if(inputLen){
+    const f=forward/inputLen,s=strafe/inputLen;
+    const sin=Math.sin(yaw),cos=Math.cos(yaw);
+    const dx=s*cos+f*-sin,dz=s*sin+f*cos;
+    const acceleration=grounded?45:8;
+    player.velocity.x+=dx*acceleration*dt;
+    player.velocity.z+=dz*acceleration*dt;
+    const horizontal=Math.hypot(player.velocity.x,player.velocity.z);
+    if(horizontal>speed){player.velocity.x*=speed/horizontal;player.velocity.z*=speed/horizontal}
   }
-  player.velocity.y-=25*dt;
-  if(keys.Space&&player.onGround){player.velocity.y=8;player.onGround=false}
+  const friction=grounded?0.6:0.91;
+  const drag=Math.pow(friction,dt*20);
+  player.velocity.x*=drag;
+  player.velocity.z*=drag;
+  player.velocity.y-=32*dt;
+  if(keys.Space&&grounded){player.velocity.y=8.35;player.onGround=false}
   const old=player.position.clone();
-  player.position.x+=player.velocity.x*dt;if(collides(player.position)){player.position.x=old.x;player.velocity.x=0}
-  player.position.z+=player.velocity.z*dt;if(collides(player.position)){player.position.z=old.z;player.velocity.z=0}
+  player.position.x+=player.velocity.x*dt;
+  if(collides(player.position)){player.position.x=old.x;player.velocity.x=0}
+  player.position.z+=player.velocity.z*dt;
+  if(collides(player.position)){player.position.z=old.z;player.velocity.z=0}
   player.position.y+=player.velocity.y*dt;
-  if(collides(player.position)){player.position.y=old.y;if(player.velocity.y<0)player.onGround=true;player.velocity.y=0}else player.onGround=false;
+  if(collides(player.position)){
+    player.position.y=old.y;
+    if(player.velocity.y<0)player.onGround=true;
+    player.velocity.y=0;
+  }else player.onGround=false;
   if(player.position.y<WORLD_MIN-10){player.position.set(0,getHeight(0,0)+3,0);player.velocity.set(0,0,0)}
 }
 function cameraUpdate(){
   const mode=Number(debugState.cameraMode||0);
   playerModel.position.copy(player.position);
   playerModel.rotation.y=yaw+Math.PI;
+  const eye=player.position.clone().add(new THREE.Vector3(0,1.62,0));
+  camera.fov=70;
+  camera.updateProjectionMatrix();
   if(mode===0){
     playerModel.visible=false;
-    camera.position.set(player.position.x,player.position.y+1.62,player.position.z);
+    camera.position.copy(eye);
     camera.rotation.order='YXZ';
     camera.rotation.y=yaw;
     camera.rotation.x=pitch;
+    camera.rotation.z=0;
     heldGroup.visible=debugState.showArms!==false;
     return;
   }
   heldGroup.visible=false;
   playerModel.visible=true;
   const look=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
-  const focus=player.position.clone().add(new THREE.Vector3(0,1.05,0));
-  if(mode===1){
-    camera.position.copy(focus).addScaledVector(look,-4);
-    camera.lookAt(focus);
-  }else{
-    camera.position.copy(focus).addScaledVector(look,4);
-    camera.lookAt(focus);
+  const focus=player.position.clone().add(new THREE.Vector3(0,1.35,0));
+  const direction=mode===1?-1:1;
+  const desired=focus.clone().addScaledVector(look,direction*4);
+  const delta=desired.clone().sub(focus),distance=delta.length();
+  for(let d=.15;d<distance;d+=.12){
+    const p=focus.clone().addScaledVector(delta,d/distance);
+    if(solid(Math.floor(p.x),Math.floor(p.y),Math.floor(p.z))){
+      desired.copy(focus).addScaledVector(delta,Math.max(0,(d-.18)/distance));
+      break;
+    }
   }
+  camera.position.copy(desired);
+  camera.lookAt(focus);
   camera.near=.05;
   camera.far=300;
+  camera.updateProjectionMatrix();
 }
 let breaking=false,breakTarget=null,breakStart=0,breakDuration=0,breakStage=-1;
 const destroyTextures=Array.from({length:10},(_,i)=>loader.load(`https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.3-snapshot-7/assets/minecraft/textures/block/destroy_stage_${i}.png`));
@@ -802,7 +829,7 @@ function placeBlock(){
 }
 
 document.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('mousedown',e=>{if(e.button===0)startBreaking();if(e.button===2)placeBlock()});
+document.addEventListener('mousedown',e=>{if(e.button===0){attackStarted=performance.now();startBreaking()}if(e.button===2)placeBlock()});
 document.addEventListener('mouseup',e=>{if(e.button===0)stopBreaking()});
 
 function updateKeysHud(){for(const code of ['KeyW','KeyA','KeyS','KeyD','Space']){const el=document.querySelector(`[data-key="${code}"]`);if(el)el.classList.toggle('pressed',!!keys[code])}}
