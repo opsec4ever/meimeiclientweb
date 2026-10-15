@@ -716,7 +716,7 @@ function move(dt){
   if(inputLen){
     const f=forward/inputLen,s=strafe/inputLen;
     const sin=Math.sin(yaw),cos=Math.cos(yaw);
-    const dx=s*cos+f*-sin,dz=s*sin+f*cos;
+    const dx=s*cos-f*sin,dz=-s*sin-f*cos;
     const acceleration=grounded?45:8;
     player.velocity.x+=dx*acceleration*dt;
     player.velocity.z+=dz*acceleration*dt;
