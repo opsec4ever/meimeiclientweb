@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.181.1/examples/jsm/loaders/GLTFLoader.js';
 
 const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<800;
 const CHUNK_SIZE=16,WORLD_MIN=-64,WORLD_MAX=320,RENDER_DISTANCE=mobile?0:1,WATER_LEVEL=63,seed=(crypto.getRandomValues(new Uint32Array(1))[0]||Date.now())|0;
@@ -317,6 +318,28 @@ function addPickaxe(){
   heldItemGroup.add(pickaxeGroup);
 }
 addPickaxe();
+
+const pickaxeLoader=new GLTFLoader();
+pickaxeLoader.load('./minecraft_netherite_pickaxe.glb',gltf=>{
+  const model=gltf.scene;
+  const bounds=new THREE.Box3().setFromObject(model);
+  const size=bounds.getSize(new THREE.Vector3());
+  const center=bounds.getCenter(new THREE.Vector3());
+  model.position.sub(center);
+  const scale=.92/Math.max(size.x,size.y,size.z);
+  model.scale.setScalar(scale);
+  model.position.set(.48,-.48,-.98);
+  model.traverse(o=>{
+    if(!o.isMesh)return;
+    o.frustumCulled=false;
+    o.renderOrder=10;
+    const mats=Array.isArray(o.material)?o.material:[o.material];
+    mats.forEach(m=>{m.depthTest=false;m.depthWrite=false});
+  });
+  pickaxeGroup.clear();
+  glintOverlays.length=0;
+  pickaxeGroup.add(model);
+},undefined,error=>console.error('failed to load netherite pickaxe model:',error));
 
 let customTotem='';
 const totemCanvas=document.createElement('canvas');totemCanvas.width=64;totemCanvas.height=64;
