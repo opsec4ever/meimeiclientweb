@@ -325,20 +325,21 @@ pickaxeLoader.load('./minecraft_netherite_pickaxe.glb',gltf=>{
   const bounds=new THREE.Box3().setFromObject(model);
   const size=bounds.getSize(new THREE.Vector3());
   const center=bounds.getCenter(new THREE.Vector3());
-  model.position.sub(center);
-  const scale=.92/Math.max(size.x,size.y,size.z);
+  const scale=.78/Math.max(size.x,size.y,size.z);
   model.scale.setScalar(scale);
-  model.position.set(.48,-.48,-.98);
+  model.position.set(.48-center.x*scale,-.48-center.y*scale,-.98-center.z*scale);
+  model.rotation.set(0,0,0);
   model.traverse(o=>{
     if(!o.isMesh)return;
     o.frustumCulled=false;
     o.renderOrder=10;
     const mats=Array.isArray(o.material)?o.material:[o.material];
-    mats.forEach(m=>{m.depthTest=false;m.depthWrite=false});
+    mats.forEach(m=>{m.depthTest=false;m.depthWrite=false;m.needsUpdate=true});
   });
   pickaxeGroup.clear();
   glintOverlays.length=0;
   pickaxeGroup.add(model);
+  pickaxeGroup.userData.loadedGLB=true;
 },undefined,error=>console.error('failed to load netherite pickaxe model:',error));
 
 let customTotem='';
@@ -397,10 +398,20 @@ function animateHeld(dt){
   heldGroup.position.x=moving?Math.cos(phase)*.008:0;
   heldGroup.position.y=moving?Math.abs(Math.sin(phase*2))*.012:0;
   const elapsed=performance.now()-attackStarted;
-  const swing=elapsed<260?Math.sin((elapsed/260)*Math.PI):0;
-  pickaxeGroup.rotation.x=walkSwing-swing*1.05;
-  pickaxeGroup.rotation.y=swing*.16;
-  pickaxeGroup.rotation.z=-walkSwing*.4-swing*.42;
+  const progress=elapsed<320?Math.max(0,elapsed/320):0;
+  const swing=elapsed<320?Math.sin(Math.sqrt(progress)*Math.PI):0;
+  const oldSwing=elapsed<320?Math.sin(Math.sqrt(progress)*Math.PI):0;
+  pickaxeGroup.position.x=moving?Math.cos(phase)*.008:0;
+  pickaxeGroup.position.y=bob;
+  pickaxeGroup.position.z=0;
+  pickaxeGroup.rotation.x=walkSwing-oldSwing*.9;
+  pickaxeGroup.rotation.y=oldSwing*.42;
+  pickaxeGroup.rotation.z=-walkSwing*.35-oldSwing*.55;
+  if(elapsed<320){
+    pickaxeGroup.position.x-=Math.sin(Math.sqrt(progress)*Math.PI)*.22;
+    pickaxeGroup.position.y+=Math.sin(Math.sqrt(progress)*Math.PI*2)*.08;
+    pickaxeGroup.position.z-=Math.sin(Math.sqrt(progress)*Math.PI)*.12;
+  }
   if(playerModel.visible){
     const p=playerModel.children;
     if(p[2])p[2].rotation.x=walkSwing-swing*.8;
