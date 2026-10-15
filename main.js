@@ -285,26 +285,34 @@ const glintOverlays=[];
 const pickaxeGroup=new THREE.Group();
 function addPickaxe(){
   pickaxeGroup.clear();
-  const metal=new THREE.MeshBasicMaterial({color:0x30283a,depthTest:false,depthWrite:false});
-  const purple=new THREE.MeshBasicMaterial({color:0xb45cff,depthTest:false,depthWrite:false});
-  const shaft=new THREE.Mesh(new THREE.BoxGeometry(.09,.95,.09),metal);
-  const head=new THREE.Mesh(new THREE.BoxGeometry(.72,.12,.12),purple);
-  const hook=new THREE.Mesh(new THREE.BoxGeometry(.12,.38,.12),purple);
-  shaft.position.set(.50,-.50,-.98);shaft.rotation.z=-.22;
-  head.position.set(.50,-.16,-.98);head.rotation.z=-.22;
-  hook.position.set(.74,-.16,-.98);hook.rotation.z=-.95;
-  for(const m of [shaft,head,hook]){
+  const dark=new THREE.MeshLambertMaterial({color:0x292b39});
+  const edge=new THREE.MeshLambertMaterial({color:0x777b91});
+  const purple=new THREE.MeshLambertMaterial({color:0x4b465f});
+  const grip=new THREE.MeshLambertMaterial({color:0x44352c});
+  const handle=new THREE.Mesh(new THREE.BoxGeometry(.075,.78,.075),grip);
+  handle.position.set(.50,-.48,-.98);handle.rotation.z=-.23;
+  const pommel=new THREE.Mesh(new THREE.BoxGeometry(.095,.10,.095),dark);
+  pommel.position.set(.59,-.88,-.98);pommel.rotation.z=-.23;
+  const head=new THREE.Mesh(new THREE.BoxGeometry(.68,.105,.13),dark);
+  head.position.set(.49,-.17,-.98);head.rotation.z=-.23;
+  const left=new THREE.Mesh(new THREE.BoxGeometry(.20,.15,.15),edge);
+  left.position.set(.19,-.14,-.98);left.rotation.z=-.23;
+  const right=new THREE.Mesh(new THREE.BoxGeometry(.19,.15,.15),edge);
+  right.position.set(.79,-.19,-.98);right.rotation.z=-.23;
+  const bevel=new THREE.Mesh(new THREE.BoxGeometry(.48,.035,.145),purple);
+  bevel.position.set(.49,-.115,-.98);bevel.rotation.z=-.23;
+  for(const m of [handle,pommel,head,left,right,bevel]){
     m.frustumCulled=false;
+    m.renderOrder=10;
+    m.material.depthTest=false;m.material.depthWrite=false;
     pickaxeGroup.add(m);
-    const g=glintMaterial.clone();
-    const overlay=new THREE.Mesh(m.geometry,g);
-    overlay.position.copy(m.position);
-    overlay.rotation.copy(m.rotation);
-    overlay.scale.setScalar(1.015);
-    overlay.frustumCulled=false;
-    overlay.userData.glint=true;
-    glintOverlays.push(overlay);
-    pickaxeGroup.add(overlay);
+    if(m===head||m===left||m===right||m===bevel){
+      const overlay=new THREE.Mesh(m.geometry,glintMaterial.clone());
+      overlay.position.copy(m.position);overlay.rotation.copy(m.rotation);
+      overlay.scale.setScalar(1.012);overlay.frustumCulled=false;
+      overlay.renderOrder=11;overlay.userData.glint=true;
+      glintOverlays.push(overlay);pickaxeGroup.add(overlay);
+    }
   }
   heldItemGroup.add(pickaxeGroup);
 }
